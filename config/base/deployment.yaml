@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coral
+  namespace: coral
+  labels:
+    app: coral 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coral
+  template:
+    metadata:
+      labels:
+        app: coral
+    spec:
+      serviceAccountName: coral-system
+      containers:
+        - name: controller
+          image: docker.io/strataviz/coral:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: tls
+              mountPath: "/etc/admission-webhook/tls"
+              readOnly: true
+      volumes:
+        - name: tls
+          secret:
+            secretName: coral-stvz-io-webhook-tls

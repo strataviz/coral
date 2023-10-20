@@ -15,7 +15,13 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
 
 # Go workspace file
 go.work
+
+bin/
+
+# Test certs
+config/overlays/dev/tls.*
+config/overlays/dev/*-webhooks.yaml

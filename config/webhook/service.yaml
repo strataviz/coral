@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: coral
+  name: coral-stvz-io-webhook
+  namespace: default
+spec:
+  type: NodePort
+  ports:
+    - port: 9443
+      protocol: TCP
+      targetPort: 9443
+      nodePort: 30100
+  selector:
+    name: coral
