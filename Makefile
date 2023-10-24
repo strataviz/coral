@@ -31,32 +31,22 @@ generate: codegen manifests
 ### Build, install, run, and clean
 ###
 .PHONY: install
-install: generate tls
+install: generate
 	kubectl apply -k config/overlays/$(ENV)
 
 .PHONY: uninstall
 uninstall:
 	kubectl delete -k config/overlays/$(ENV)
 
-.PHONY: tls
-tls:
-ifeq ($(ENV), "dev")
-	@./scripts/gen-certs.sh
-endif
-
 .PHONY: run
 run:
 	$(eval POD := $(shell kubectl get pods -n coral -l app=coral -o=custom-columns=:metadata.name --no-headers))
-	kubectl exec -n coral -it pod/$(POD) -- bash -c "go run main.go -zap-log-level=8"
+	kubectl exec -n coral -it pod/$(POD) -- bash -c "go run main.go -zap-log-level=8 -skip-insecure-verify=true"
 
 .PHONY: exec
 exec:
 	$(eval POD := $(shell kubectl get pods -n coral -l app=coral -o=custom-columns=:metadata.name --no-headers))
 	kubectl exec -n coral -it pod/$(POD) -- bash
-
-.PHONY: clean
-clean: kind-clean
-	@rm -f $(LOCALBIN)/*
 
 ###
 ### Individual dep installs were copied out of kubebuilder testdata makefiles.
@@ -73,21 +63,15 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE)
 $(KUSTOMIZE): $(LOCALBIN)
-	@if test -x $(LOCALBIN)/kustomize && ! $(LOCALBIN)/kustomize version | grep -q $(KUSTOMIZE_VERSION); then \
-		echo "$(LOCALBIN)/kustomize version is not expected $(KUSTOMIZE_VERSION). Removing it before installing."; \
-		rm -rf $(LOCALBIN)/kustomize; \
-	fi
+	@curl -sSLo ./scripts/install_kustomize.sh "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+	@chmod +x ./scripts/install_kustomize.sh
+	@./scripts/install_kustomize.sh $(KUSTOMIZE_VERSION) $(LOCALBIN)
 
-###
-### Local development environment
-###
 .PHONY: dev
-dev: kind-start kind-load install
+dev:
+	@$(KUSTOMIZE) build config/overlays/$(ENV) | envsubst | kubectl apply -f -
 
-.PHONY: kind-start
-kind-start:
-	@./scripts/kind-start.sh
-
-.PHONY: kind-clean
-kind-clean:
-	@kind delete cluster --name=strataviz
+.PHONY: clean
+clean:
+	@kubectl delete -k config/overlays/$(ENV)
+	@rm -f $(LOCALBIN)/*

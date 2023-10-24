@@ -10,7 +10,11 @@ type ControllerOpts struct{}
 type Controller struct{}
 
 func SetupWithManager(mgr ctrl.Manager) (err error) {
-	builderController := &builder.Controller{}
+	builderController := &builder.Controller{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("builder-controller"),
+	}
 	if err = builderController.SetupWithManager(mgr); err != nil {
 		return
 	}

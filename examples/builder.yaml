@@ -1,0 +1,12 @@
+apiVersion: stvz.io/v1
+kind: Builder
+metadata:
+  name: test
+spec:
+  enabled: true
+  secretName: testing-github-secrets
+  repositories:
+    - name: strataviz/coral
+      dryRun: false
+      watch:
+        maxAge: 72h

@@ -57,6 +57,14 @@ rules:
   - patch
   - update
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - stvz.io
   resources:
   - builders

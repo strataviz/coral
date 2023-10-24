@@ -24,8 +24,8 @@ import (
 
 // +kubebuilder:docs-gen:collapse=Go imports
 
-// +kubebuilder:webhook:verbs=create;update,path=/mutate-coral-stvz-io-builder,mutating=true,failurePolicy=fail,groups=stvz.io,resources=builders,versions=v1,name=mbuilder.stvz.io,admissionReviewVersions=v1,sideEffects=none
-// +kubebuilder:webhook:verbs=create;update,path=/validate-coral-stvz-io-builder,mutating=false,failurePolicy=fail,groups=stvz.io,resources=builders,versions=v1,name=vbuilder.stvz.io,admissionReviewVersions=v1,sideEffects=none
+// +kubebuilder:webhook:verbs=create;update,path=/mutate-stvz-io-v1-builder,mutating=true,failurePolicy=fail,groups=stvz.io,resources=builders,versions=v1,name=mbuilder.stvz.io,admissionReviewVersions=v1,sideEffects=none
+// +kubebuilder:webhook:verbs=create;update,path=/validate-stvz-io-v1-builder,mutating=false,failurePolicy=fail,groups=stvz.io,resources=builders,versions=v1,name=vbuilder.stvz.io,admissionReviewVersions=v1,sideEffects=none
 
 // SetupWebhookWithManager adds webhook for Discovery.
 func (b *Builder) SetupWebhookWithManager(mgr ctrl.Manager) error {
@@ -40,11 +40,21 @@ func (b *Builder) Default() {
 
 // ValidateCreate implements webhook Validator.
 func (b *Builder) ValidateCreate() (admission.Warnings, error) {
+	// TODO: check to see if the secret exists, then grab the credentials to make
+	// sure that everything is defined correctly.
+
+	// TODO: actually go out to github and see if we have access to the repo and if
+	// it exists.  We should be able to do that if we have the credentials.
 	return admission.Warnings{}, nil
 }
 
 // ValidateUpdate implements webhook Validator.
 func (b *Builder) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
+	// TODO: check to see if the secret exists, then grab the credentials to make
+	// sure that everything is defined correctly.
+
+	// TODO: actually go out to github and see if we have access to the repo and if
+	// it exists.  We should be able to do that if we have the credentials.
 	return admission.Warnings{}, nil
 }
 

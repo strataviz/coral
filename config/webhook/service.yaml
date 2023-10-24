@@ -3,14 +3,14 @@ kind: Service
 metadata:
   labels:
     app: coral
-  name: coral-stvz-io-webhook
-  namespace: default
+  name: coral-webhook-service
+  namespace: coral
 spec:
   type: NodePort
   ports:
-    - port: 9443
+    - port: 443
       protocol: TCP
       targetPort: 9443
       nodePort: 30100
   selector:
-    name: coral
+    app: coral

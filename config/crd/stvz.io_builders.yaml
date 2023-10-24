@@ -32,32 +32,45 @@ spec:
             type: object
           spec:
             properties:
-              repository:
-                properties:
-                  watch:
-                    properties:
-                      branches:
-                        items:
+              enabled:
+                type: boolean
+              repositories:
+                items:
+                  properties:
+                    dryRun:
+                      type: boolean
+                    enabled:
+                      type: boolean
+                    name:
+                      type: string
+                    watch:
+                      properties:
+                        branches:
+                          items:
+                            type: string
+                          type: array
+                        maxAge:
                           type: string
-                        type: array
-                      dryRun:
-                        type: boolean
-                      releases:
-                        items:
-                          type: string
-                        type: array
-                      tags:
-                        items:
-                          type: string
-                        type: array
-                    type: object
-                type: object
+                        pollIntervalSeconds:
+                          type: integer
+                        releases:
+                          items:
+                            type: string
+                          type: array
+                        tags:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                  required:
+                  - name
+                  type: object
+                type: array
               secretName:
                 type: string
-              type:
-                type: string
-              url:
-                type: string
+            required:
+            - repositories
+            - secretName
             type: object
           status:
             properties:

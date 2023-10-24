@@ -10,7 +10,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-coral-stvz-io-builder
+      path: /mutate-stvz-io-v1-builder
   failurePolicy: Fail
   name: mbuilder.stvz.io
   rules:
@@ -36,7 +36,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-coral-stvz-io-builder
+      path: /validate-stvz-io-v1-builder
   failurePolicy: Fail
   name: vbuilder.stvz.io
   rules:

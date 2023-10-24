@@ -29,9 +29,9 @@ spec:
             - containerPort: 9090
           volumeMounts:
             - name: tls
-              mountPath: "/etc/admission-webhook/tls"
+              mountPath: "/etc/webhook/tls"
               readOnly: true
       volumes:
         - name: tls
           secret:
-            secretName: coral-stvz-io-webhook-tls
+            secretName: coral-webhook-cert

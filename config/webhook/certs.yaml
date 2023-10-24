@@ -1,0 +1,28 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: coral-selfsigned-issuer
+  namespace: coral
+  labels:
+    app.kubernetes.io/name: coral
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: coral-webhook-cert
+  namespace: coral
+  labels:
+    app.kubernetes.io/name: coral
+spec:
+  dnsNames:
+    - coral-webhook-service.coral.svc
+    - coral-webhook-service.coral.svc.cluster.local
+  issuerRef:
+    kind: Issuer
+    name: coral-selfsigned-issuer
+  secretName: coral-webhook-cert
+  privateKey:
+    rotationPolicy: Never

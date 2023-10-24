@@ -35,12 +35,13 @@ spec:
             - name: app
               mountPath: /usr/src/app
             - name: tls
-              mountPath: "/etc/admission-webhook/tls"
+              mountPath: "/etc/webhook/tls"
               readOnly: true
       volumes:
         - name: app
           hostPath:
-            path: /app
+            # TODO: this should be configurable based on the developer's environment.
+            path: /mnt/github.com/strataviz/coral
         - name: tls
           secret:
-            secretName: coral-stvz-io-webhook-tls
+            secretName: coral-webhook-cert

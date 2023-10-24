@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	DefaultCertDir              string = "/etc/admission-webhook/tls"
+	DefaultCertDir              string = "/etc/webhook/tls"
 	DefaultEnableLeaderElection bool   = false
 	DefaultSkipInsecureVerify   bool   = false
 )
@@ -69,7 +69,7 @@ func main() {
 	}
 
 	if err = (&v1.Builder{}).SetupWebhookWithManager(mgr); err != nil {
-		log.Error(err, "unable to create webhook", "webhook", "Collector")
+		log.Error(err, "unable to create webhook", "webhook", "Builder")
 		os.Exit(1)
 	}
 

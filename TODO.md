@@ -1,5 +1,7 @@
 # TODO
-
+* [] Build watcher updates when the secret changes.
+* [] Move to cobra arguments so we can sepearate the coral components.
+  * [] I think we need at least a controller, builder, and sync command.
 * [] Create a new devtools repo to include:
   * [] Generalized cert generation scripts for webhook development
   * [] Generalized kind cluster management so we can use the same clusters cross-project

@@ -21,23 +21,18 @@ import (
 
 // +kubebuilder:docs-gen:collapse=Go imports
 
-// RepositoryOn is the watch configuration for a git repository.  There's quite
-// a few combinations of things that can be watched, so I'm going to start with
-// the simplest which will be pushes to a branch, the creation of releases, and
-// the creation of tags matching a specific pattern.
-// TODO: I'll need additional fields for manipulating the release names for the
-// builds.  By default we'll use the tag, branch, or release name as the version
-// for the build.  I think we can add a regex to extract version info from the
-// name or the actually source.
+// Watch is the watch configuration for a git repository.
 type Watch struct {
-	// +optional
-	// DryRun is a flag that indicates whether or not to actually run the build.
-	// If set to true, then a change event will be logged, but the build will not
-	// be kicked off.
-	DryRun *bool `json:"dryRun"`
 	// +optional
 	// Branches are the branches to watch.
 	Branches []string `json:"branches"`
+	// +optional
+	// MaxAge is the maximum age of a commit to consider.  This defaults to 1h.
+	MaxAge *metav1.Duration `json:"maxAge"`
+	// +optional
+	// PollIntervalSeconds is the number of seconds to wait between polling the
+	// repository events for changes.  This defaults to 10 seconds.
+	PollIntervalSeconds *int `json:"pollIntervalSeconds"`
 	// +optional
 	// Tags contain the patterns to match for tags.
 	Tags []string `json:"tags"`
@@ -46,8 +41,21 @@ type Watch struct {
 	Releases []string `json:"releases"`
 }
 
-// Repository is the configuration for a git repository.
+// Repository is the configuration for a git repository.  In the future, we'll
+// support other types of repositories, but for now, we're just going to support
+// github.
 type Repository struct {
+	// +optional
+	// DryRun is a flag that indicates whether or not to actually run the build.
+	// If set to true, then a change event will be logged, but the build will not
+	// be kicked off.
+	DryRun *bool `json:"dryRun"`
+	// +optional
+	// Enabled indicates the watch should poll.
+	Enabled *bool `json:"enabled"`
+	// +required
+	// Name is the name of the repository to watch in owner/name format.
+	Name *string `json:"name"`
 	// +optional
 	Watch *Watch `json:"watch"`
 }
@@ -55,19 +63,17 @@ type Repository struct {
 // BuilderSpec is the spec for a Builder resource.
 type BuilderSpec struct {
 	// +optional
+	// Enabled globally enables or disables the builder respositories.  This
+	// defaults to true.
+	Enabled *bool `json:"enabled"`
+	// +required
 	// Secret is the name of the secret resource that contains the credentials
 	// for accessing a git repository.  In the future, I'll pull this into vendor
 	// specific secrets.
 	SecretName string `json:"secretName"`
-	// +optional
-	// API is the base URL for the git (in this case github) API.
-	URL string `json:"url"`
-	// +optional
-	// Type is the type of git repository.  Currently only github is supported.
-	Type string `json:"type"`
-	// +optional
+	// +required
 	// Watch is a list of repositories to watch.
-	Repository *Repository `json:"repository"`
+	Repositories []*Repository `json:"repositories"`
 }
 
 // BuilderStatus is the status for a Builder resource.

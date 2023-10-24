@@ -5,7 +5,35 @@ commonAnnotations:
   strata.ctx.sh/authors: "StrataViz"
   strata.ctx.sh/license: "Apache"
   strata.ctx.sh/support: "https://github.com/strataviz/coral/issues"
-
+  cert-manager.io/inject-ca-from: coral/coral-webhook-cert
+patches:
+  - target:
+      kind: ValidatingWebhookConfiguration
+      name: validating-webhook-configuration
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: coral-webhook
+      - op: replace
+        path: /webhooks/0/clientConfig/service/name
+        value: coral-webhook-service
+      - op: replace
+        path: /webhooks/0/clientConfig/service/namespace
+        value: coral
+  - target:
+      kind: MutatingWebhookConfiguration
+      name: mutating-webhook-configuration
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: coral-webhook
+      - op: replace
+        path: /webhooks/0/clientConfig/service/name
+        value: coral-webhook-service
+      - op: replace
+        path: /webhooks/0/clientConfig/service/namespace
+        value: coral
 resources:
+  - certs.yaml
   - manifests.yaml
   - service.yaml
