@@ -6,17 +6,10 @@ commonAnnotations:
   strata.ctx.sh/support: "https://github.com/strataviz/coral/issues"
 resources: 
  - ../../base
+ - secret.yaml
 patches:
   - path: deployment.yaml
     target:
       kind: Deployment
       name: coral
       namespace: coral
-
-secretGenerator:
-  - name: coral-github-secrets
-    literals:
-    - token=${CORAL_GITHUB_TOKEN}
-
-generatorOptions:
-  disableNameSuffixHash: true

@@ -90,6 +90,11 @@ func (in *BuilderSpec) DeepCopyInto(out *BuilderSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.SecretName != nil {
+		in, out := &in.SecretName, &out.SecretName
+		*out = new(string)
+		**out = **in
+	}
 	if in.Repositories != nil {
 		in, out := &in.Repositories, &out.Repositories
 		*out = make([]*Repository, len(*in))

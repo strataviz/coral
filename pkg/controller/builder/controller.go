@@ -53,7 +53,20 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 		return ctrl.Result{}, nil
 	}
 
-	logger.Info("reconciling builder", "request", req)
+	logger.Info("reconciling builder", "request", req, "spec", observed.builder.Spec)
+
+	var token string
+	if observed.token == nil {
+		logger.Info("unable to find the secret for the builder, private repos will not be accessible", "request", req)
+	} else {
+		if tok, ok := observed.token.Data["token"]; !ok {
+			logger.Info("unable to find the token for the builder, private repos will not be accessible", "request", req)
+		} else {
+			token = string(tok)
+			logger.Info("found the token for the builder", "request", req, "token", token)
+		}
+	}
+
 	// TODO: create or update the builder
 	return ctrl.Result{}, nil
 }

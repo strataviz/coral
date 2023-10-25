@@ -32,7 +32,7 @@ generate: codegen manifests
 ###
 .PHONY: install
 install: generate
-	kubectl apply -k config/overlays/$(ENV)
+	@$(KUSTOMIZE) build config/overlays/$(ENV) | envsubst | kubectl apply -f -
 
 .PHONY: uninstall
 uninstall:
@@ -66,10 +66,6 @@ $(KUSTOMIZE): $(LOCALBIN)
 	@curl -sSLo ./scripts/install_kustomize.sh "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 	@chmod +x ./scripts/install_kustomize.sh
 	@./scripts/install_kustomize.sh $(KUSTOMIZE_VERSION) $(LOCALBIN)
-
-.PHONY: dev
-dev:
-	@$(KUSTOMIZE) build config/overlays/$(ENV) | envsubst | kubectl apply -f -
 
 .PHONY: clean
 clean:

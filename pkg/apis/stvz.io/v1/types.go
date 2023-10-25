@@ -70,7 +70,7 @@ type BuilderSpec struct {
 	// Secret is the name of the secret resource that contains the credentials
 	// for accessing a git repository.  In the future, I'll pull this into vendor
 	// specific secrets.
-	SecretName string `json:"secretName"`
+	SecretName *string `json:"secretName"`
 	// +required
 	// Watch is a list of repositories to watch.
 	Repositories []*Repository `json:"repositories"`

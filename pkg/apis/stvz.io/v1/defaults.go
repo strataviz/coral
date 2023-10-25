@@ -43,6 +43,11 @@ func defaultedBuilder(obj *Builder) {
 		*obj.Spec.Enabled = DefaultBuilderEnabled
 	}
 
+	if obj.Spec.SecretName == nil {
+		obj.Spec.SecretName = new(string)
+		*obj.Spec.SecretName = "coral-github-token"
+	}
+
 	for _, repo := range obj.Spec.Repositories {
 		defaultedRepository(repo)
 	}

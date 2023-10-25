@@ -4,7 +4,6 @@ metadata:
   name: test
 spec:
   enabled: true
-  secretName: testing-github-secrets
   repositories:
     - name: strataviz/coral
       dryRun: false
