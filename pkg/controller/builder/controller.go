@@ -1,4 +1,4 @@
-package controller
+package builder
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
 )
 
@@ -32,12 +33,27 @@ func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
 
 func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	// TODO: break me out to observer
-	var observed stvziov1.Builder
-	err := c.Get(ctx, req.NamespacedName, &observed)
+	logger := log.FromContext(ctx)
+
+	observed := NewObservedState()
+	observer := StateObserver{
+		Client:  c.Client,
+		Request: req,
+	}
+
+	err := observer.observe(ctx, &observed)
 	if err != nil {
+		logger.Error(err, "unable to observe state", "request", req)
 		return ctrl.Result{}, err
 	}
 
+	if observed.builder == nil {
+		logger.Info("builder has been deleted, cleaning up", "request", req)
+		// TODO: cleanup
+		return ctrl.Result{}, nil
+	}
+
+	logger.Info("reconciling builder", "request", req)
+	// TODO: create or update the builder
 	return ctrl.Result{}, nil
 }
