@@ -18,8 +18,13 @@ type Controller struct {
 	BuildManager *Manager
 }
 
-func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
-	c.BuildManager = NewManager()
+func SetupWithManager(mgr ctrl.Manager) error {
+	c := &Controller{
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+		Recorder:     mgr.GetEventRecorderFor("builder-controller"),
+		BuildManager: NewManager(),
+	}
 	return ctrl.NewControllerManagedBy(mgr).For(&stvziov1.Builder{}).Complete(c)
 }
 
