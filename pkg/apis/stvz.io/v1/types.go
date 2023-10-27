@@ -21,8 +21,8 @@ import (
 
 // +kubebuilder:docs-gen:collapse=Go imports
 
-// Watch is the watch configuration for a git repository.
-type Watch struct {
+// On is the watch configuration for a git repository.
+type On struct {
 	// +optional
 	// Branches are the branches to watch.
 	Branches []string `json:"branches"`
@@ -41,39 +41,47 @@ type Watch struct {
 	Releases []string `json:"releases"`
 }
 
-// Repository is the configuration for a git repository.  In the future, we'll
+// Watch is the watch configuration for a git repository.  In the future, we'll
 // support other types of repositories, but for now, we're just going to support
 // github.
-type Repository struct {
+type Watch struct {
 	// +optional
+	// +nullable
 	// DryRun is a flag that indicates whether or not to actually run the build.
 	// If set to true, then a change event will be logged, but the build will not
 	// be kicked off.
 	DryRun *bool `json:"dryRun"`
 	// +optional
+	// +nullable
 	// Enabled indicates the watch should poll.
 	Enabled *bool `json:"enabled"`
 	// +required
-	// Name is the name of the repository to watch in owner/name format.
-	Name *string `json:"name"`
+	// Owner is the owner (user or organization) of the repository.
+	Owner *string `json:"owner"`
+	// +required
+	// Repo is the name of the repository.
+	Repo *string `json:"repo"`
 	// +optional
-	Watch *Watch `json:"watch"`
+	// +nullable
+	On *On `json:"on"`
 }
 
 // BuilderSpec is the spec for a Builder resource.
 type BuilderSpec struct {
 	// +optional
+	// +nullable
 	// Enabled globally enables or disables the builder respositories.  This
 	// defaults to true.
 	Enabled *bool `json:"enabled"`
-	// +required
+	// +optional
+	// +nullable
 	// Secret is the name of the secret resource that contains the credentials
 	// for accessing a git repository.  In the future, I'll pull this into vendor
 	// specific secrets.
 	SecretName *string `json:"secretName"`
 	// +required
-	// Watch is a list of repositories to watch.
-	Repositories []*Repository `json:"repositories"`
+	// Watches is a list of repositories to watch.
+	Watches []Watch `json:"watches"`
 }
 
 // BuilderStatus is the status for a Builder resource.

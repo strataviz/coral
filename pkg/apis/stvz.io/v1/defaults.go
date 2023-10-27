@@ -27,8 +27,8 @@ import (
 const (
 	DefaultWatchMaxAge              time.Duration = time.Hour
 	DefaultWatchPollIntervalSeconds int           = 30
-	DefaultRepositoryEnabled        bool          = true
-	DefaultRepositoryDryRun         bool          = false
+	DefaultWatchEnabled             bool          = true
+	DefaultWatchDryRun              bool          = false
 	DefaultBuilderEnabled           bool          = true
 )
 
@@ -48,30 +48,30 @@ func defaultedBuilder(obj *Builder) {
 		*obj.Spec.SecretName = "coral-github-token"
 	}
 
-	for _, repo := range obj.Spec.Repositories {
-		defaultedRepository(repo)
+	for _, repo := range obj.Spec.Watches {
+		defaultedWatch(&repo)
 	}
-}
-
-// defaultedRepository defaults a Repository object
-func defaultedRepository(obj *Repository) {
-	if obj.DryRun == nil {
-		obj.DryRun = new(bool)
-		*obj.DryRun = DefaultRepositoryDryRun
-	}
-
-	if obj.Enabled == nil {
-		obj.Enabled = new(bool)
-		*obj.Enabled = DefaultRepositoryEnabled
-	}
-
-	defaultedWatch(obj.Watch)
 }
 
 // defaultedWatch defaults a Watch object
 func defaultedWatch(obj *Watch) {
+	if obj.DryRun == nil {
+		obj.DryRun = new(bool)
+		*obj.DryRun = DefaultWatchDryRun
+	}
+
+	if obj.Enabled == nil {
+		obj.Enabled = new(bool)
+		*obj.Enabled = DefaultWatchEnabled
+	}
+
+	defaultedOn(obj.On)
+}
+
+// defaultedOn defaults an On object
+func defaultedOn(obj *On) {
 	if obj == nil {
-		obj = &Watch{}
+		obj = &On{}
 	}
 
 	if obj.MaxAge == nil {

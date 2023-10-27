@@ -13,11 +13,13 @@ import (
 
 type Controller struct {
 	client.Client
-	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
+	Scheme       *runtime.Scheme
+	Recorder     record.EventRecorder
+	BuildManager *Manager
 }
 
 func (c *Controller) SetupWithManager(mgr ctrl.Manager) error {
+	c.BuildManager = NewManager()
 	return ctrl.NewControllerManagedBy(mgr).For(&stvziov1.Builder{}).Complete(c)
 }
 

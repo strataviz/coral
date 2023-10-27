@@ -33,17 +33,22 @@ spec:
           spec:
             properties:
               enabled:
+                nullable: true
                 type: boolean
-              repositories:
+              secretName:
+                nullable: true
+                type: string
+              watches:
                 items:
                   properties:
                     dryRun:
+                      nullable: true
                       type: boolean
                     enabled:
+                      nullable: true
                       type: boolean
-                    name:
-                      type: string
-                    watch:
+                    "on":
+                      nullable: true
                       properties:
                         branches:
                           items:
@@ -62,15 +67,17 @@ spec:
                             type: string
                           type: array
                       type: object
+                    owner:
+                      type: string
+                    repo:
+                      type: string
                   required:
-                  - name
+                  - owner
+                  - repo
                   type: object
                 type: array
-              secretName:
-                type: string
             required:
-            - repositories
-            - secretName
+            - watches
             type: object
           status:
             properties:

@@ -4,8 +4,9 @@ metadata:
   name: test
 spec:
   enabled: true
-  repositories:
-    - name: strataviz/coral
+  watches:
+    - owner: strataviz
+      repo: coral
       dryRun: false
-      watch:
-        maxAge: 72h
+      # on:
+      #   maxAge: 72h
