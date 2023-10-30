@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -32,6 +33,7 @@ var (
 func init() {
 	_ = v1.AddToScheme(scheme)
 	_ = corev1.AddToScheme(scheme)
+	_ = appsv1.AddToScheme(scheme)
 
 	flag.StringVar(&certDir, "certs", DefaultCertDir, "specify the cert directory")
 	flag.BoolVar(&leaderElection, "enable-leader-election", DefaultEnableLeaderElection, "enable leader election")
