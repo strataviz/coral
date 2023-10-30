@@ -23,7 +23,7 @@ func SetupWithManager(mgr ctrl.Manager) error {
 	c := &Controller{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
-		Recorder: mgr.GetEventRecorderFor("builder-controller"),
+		Recorder: mgr.GetEventRecorderFor("buildqueue-controller"),
 	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&stvziov1.BuildQueue{}).
@@ -37,14 +37,11 @@ func SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=stvz.io,resources=buildqueues/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=stvz.io,resources=buildqueues/finalizers,verbs=update
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=apps,resources=statefulsets/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=apps,resources=statefulsets/finalizers,verbs=update
+// +kubebuilder:rbac:groups=apps,resources=statefulsets/status,verbs=get
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=services/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=core,resources=services/finalizers,verbs=update
-// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core,resources=pods/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=core,resources=pods/finalizers,verbs=update
+// +kubebuilder:rbac:groups=core,resources=services/status,verbs=get
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
+// +kubebuilder:rbac:groups=core,resources=pods/status,verbs=get
 
 // Reconcile is the main controller loop for the queue controller.  Though it's more
 // flexible to have a seperate controller for the queue, this does raise the issue of

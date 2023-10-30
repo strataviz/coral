@@ -19,17 +19,9 @@ rules:
 - apiGroups:
   - apps
   resources:
-  - statefulsets/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - apps
-  resources:
   - statefulsets/status
   verbs:
   - get
-  - patch
-  - update
 - apiGroups:
   - ""
   resources:
@@ -105,17 +97,9 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - services/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - ""
-  resources:
   - services/status
   verbs:
   - get
-  - patch
-  - update
 - apiGroups:
   - stvz.io
   resources:
