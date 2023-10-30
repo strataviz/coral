@@ -1,0 +1,62 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.13.0
+  name: watchsets.stvz.io
+spec:
+  group: stvz.io
+  names:
+    kind: WatchSet
+    listKind: WatchSetList
+    plural: watchsets
+    shortNames:
+    - ws
+    singular: watchset
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              enabled:
+                nullable: true
+                type: boolean
+              replicas:
+                nullable: true
+                type: integer
+              secretName:
+                nullable: true
+                type: string
+            type: object
+          status:
+            properties:
+              enabled:
+                type: boolean
+              readyReplicas:
+                type: integer
+              replicas:
+                type: integer
+              updatedReplicas:
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

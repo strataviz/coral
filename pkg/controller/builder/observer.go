@@ -13,6 +13,8 @@ import (
 
 type ObservedState struct {
 	builder     *stvziov1.Builder
+	buildQueue  *stvziov1.BuildQueue
+	pods        []corev1.Pod
 	token       *corev1.Secret
 	observeTime time.Time
 }
@@ -20,6 +22,8 @@ type ObservedState struct {
 func NewObservedState() ObservedState {
 	return ObservedState{
 		builder:     nil,
+		buildQueue:  nil,
+		pods:        []corev1.Pod{},
 		observeTime: time.Now(),
 	}
 }

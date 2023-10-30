@@ -27,7 +27,7 @@ import (
 // +kubebuilder:webhook:verbs=create;update,path=/mutate-stvz-io-v1-builder,mutating=true,failurePolicy=fail,groups=stvz.io,resources=builders,versions=v1,name=mbuilder.stvz.io,admissionReviewVersions=v1,sideEffects=none
 // +kubebuilder:webhook:verbs=create;update,path=/validate-stvz-io-v1-builder,mutating=false,failurePolicy=fail,groups=stvz.io,resources=builders,versions=v1,name=vbuilder.stvz.io,admissionReviewVersions=v1,sideEffects=none
 
-// SetupWebhookWithManager adds webhook for Discovery.
+// SetupWebhookWithManager adds webhook for Builder.
 func (b *Builder) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(b).

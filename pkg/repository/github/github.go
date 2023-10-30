@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
@@ -58,10 +57,6 @@ func (g *Github) Stop() {
 	})
 }
 
-func (g *Github) Name() string {
-	return fmt.Sprintf("github/%s/%s", g.owner, g.repo)
-}
-
 func (g *Github) intervalRun(ctx context.Context) {
 	g.log.V(8).Info("fetching events")
 	events, err := g.fetch(ctx)
@@ -82,6 +77,9 @@ func (g *Github) intervalRun(ctx context.Context) {
 }
 
 func (g *Github) fetch(ctx context.Context) ([]*github.Event, error) {
+	g.Lock()
+	defer g.Unlock()
+
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: g.token},
 	)
@@ -102,6 +100,9 @@ func (g *Github) fetch(ctx context.Context) ([]*github.Event, error) {
 }
 
 func (g *Github) process(ctx context.Context, events *github.Event) error {
+	g.Lock()
+	defer g.Unlock()
+
 	// We are interested in:
 	// CreateEvent - in conjunction with Payload.RefType == "tag" (using Ref to access the tag name)
 	// ReleaseEvent - in conjunction with Payload.Action == "published" (using Payload.Release.TagName to access the tag name)

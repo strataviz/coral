@@ -10,7 +10,6 @@ import (
 type Repository interface {
 	Start(context.Context)
 	Stop()
-	Name() string
 }
 
 type Opts struct {

@@ -25,7 +25,9 @@ func SetupWithManager(mgr ctrl.Manager) error {
 		Recorder:     mgr.GetEventRecorderFor("builder-controller"),
 		BuildManager: NewManager(),
 	}
-	return ctrl.NewControllerManagedBy(mgr).For(&stvziov1.Builder{}).Complete(c)
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&stvziov1.Builder{}).
+		Complete(c)
 }
 
 // +kubebuilder:rbac:groups=stvz.io,resources=builders,verbs=get;list;watch;create;update;patch;delete
@@ -56,11 +58,9 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 
 	if observed.builder == nil {
 		logger.Info("builder has been deleted, cleaning up", "request", req)
-		// TODO: cleanup
+		// c.BuildManager.DeleteWatches(ctx)
 		return ctrl.Result{}, nil
 	}
-
-	logger.Info("reconciling builder", "request", req, "spec", observed.builder.Spec)
 
 	var token string
 	if observed.token == nil {
@@ -73,6 +73,10 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 			logger.Info("found the token for the builder", "request", req, "token", token)
 		}
 	}
+
+	spec := observed.builder.Spec.DeepCopy()
+	logger.Info("reconciling builder", "request", req, "spec", spec)
+	c.BuildManager.AddWatches(ctx, token, spec.Watches...)
 
 	// TODO: create or update the builder
 	return ctrl.Result{}, nil

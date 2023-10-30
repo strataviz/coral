@@ -1,0 +1,6 @@
+apiVersion: stvz.io/v1
+kind: BuildQueue
+metadata:
+  name: queue
+spec:
+  replicas: 1

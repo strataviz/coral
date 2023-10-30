@@ -5,6 +5,32 @@ metadata:
   name: coral-role
 rules:
 - apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - ""
   resources:
   - jobs
@@ -65,6 +91,32 @@ rules:
   - list
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - services/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - stvz.io
   resources:
   - builders
@@ -86,6 +138,32 @@ rules:
   - stvz.io
   resources:
   - builders/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - stvz.io
+  resources:
+  - buildqueues
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - stvz.io
+  resources:
+  - buildqueues/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - stvz.io
+  resources:
+  - buildqueues/status
   verbs:
   - get
   - patch

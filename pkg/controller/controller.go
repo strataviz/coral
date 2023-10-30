@@ -3,6 +3,7 @@ package controller
 import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	builder "stvz.io/coral/pkg/controller/builder"
+	"stvz.io/coral/pkg/controller/queue"
 )
 
 type ControllerOpts struct{}
@@ -14,7 +15,9 @@ func SetupWithManager(mgr ctrl.Manager) (err error) {
 		return
 	}
 
-	// TODO: setup sync controller
+	if err = queue.SetupWithManager(mgr); err != nil {
+		return
+	}
 
 	return
 }

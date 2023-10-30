@@ -32,14 +32,14 @@ func NewManager() *Manager {
 // this is the easiest way to start out, however I think that when we
 // start splitting out the builders into individual pods for scale we'll
 // have to distribute the repos across the builders somehow.
-func (m *Manager) AddWatches(ctx context.Context, token string, repo ...*stvziov1.Watch) {
+func (m *Manager) AddWatches(ctx context.Context, token string, repo ...stvziov1.Watch) {
 	for _, r := range repo {
 		m.AddWatch(ctx, token, r)
 	}
 }
 
 // AddWatch adds a watch for a repository.
-func (m *Manager) AddWatch(ctx context.Context, token string, watch *stvziov1.Watch) {
+func (m *Manager) AddWatch(ctx context.Context, token string, watch stvziov1.Watch) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -83,7 +83,7 @@ func (m *Manager) StopAll() {
 	defer m.Unlock()
 	m.syncOnce.Do(func() {
 		for _, r := range m.repositories {
-			r.Stop()
+			go r.Stop()
 		}
 
 		m.wg.Wait()

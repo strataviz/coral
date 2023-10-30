@@ -32,6 +32,13 @@ spec:
             type: object
           spec:
             properties:
+              buildQueueRef:
+                nullable: true
+                properties:
+                  name:
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
               enabled:
                 nullable: true
                 type: boolean
