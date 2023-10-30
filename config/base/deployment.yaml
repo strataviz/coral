@@ -31,12 +31,6 @@ spec:
             - name: tls
               mountPath: "/etc/webhook/tls"
               readOnly: true
-          env:
-            - name: CORAL_GITHUB_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: coral-github-token
-                  key: token
       volumes:
         - name: tls
           secret:
