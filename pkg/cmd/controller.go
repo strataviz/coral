@@ -91,7 +91,6 @@ func (c *Controller) RunE(cmd *cobra.Command, args []string) error {
 
 	// Start the manager process
 	log.Info("starting manager")
-	log.V(8).Info("hello from me")
 	return mgr.Start(ctx)
 }
 
