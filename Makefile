@@ -41,7 +41,7 @@ uninstall:
 .PHONY: run
 run:
 	$(eval POD := $(shell kubectl get pods -n coral -l app=coral -o=custom-columns=:metadata.name --no-headers))
-	kubectl exec -n coral -it pod/$(POD) -- bash -c "go run main.go -zap-log-level=8 -skip-insecure-verify=true"
+	kubectl exec -n coral -it pod/$(POD) -- bash -c "go run main.go controller --log-level=8 --skip-insecure-verify"
 
 .PHONY: exec
 exec:
