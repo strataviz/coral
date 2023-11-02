@@ -18,6 +18,8 @@ package v1
 import (
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -30,6 +32,9 @@ const (
 	DefaultWatchEnabled             bool          = true
 	DefaultWatchDryRun              bool          = false
 	DefaultBuilderEnabled           bool          = true
+
+	DefaultBuildQueueResourcesCPU    string = "200m"
+	DefaultBuildQueueResourcesMemory string = "512Mi"
 )
 
 var (
@@ -98,10 +103,45 @@ func defaultedOn(obj *On) {
 	}
 }
 
+func defaultedBuildQueue(obj *BuildQueue) {
+	if obj.Spec.Version == nil {
+		obj.Spec.Version = new(string)
+		*obj.Spec.Version = "2.10.4-alpine"
+	}
+
+	if obj.Spec.Resources == nil {
+		obj.Spec.Resources = &corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse(DefaultBuildQueueResourcesCPU),
+				corev1.ResourceMemory: resource.MustParse(DefaultBuildQueueResourcesMemory),
+			},
+		}
+	}
+
+	// if obj.Spec.Volume == nil {
+	// 	obj.Spec.Volume = &corev1.PersistentVolumeClaim{
+	// 		ObjectMeta: metav1.ObjectMeta{
+	// 			Name:      fmt.Sprintf("%s-data", obj.Name),
+	// 			Namespace: obj.Namespace,
+	// 		},
+	// 		Spec: corev1.PersistentVolumeClaimSpec{
+	// 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+	// 			Resources: corev1.ResourceRequirements{
+	// 				corev1.ResourceList{
+	// 					corev1.ResourceStorage: resource.MustParse("1Gi"),
+	// 				},
+	// 			},
+	// 		},
+	// 	}
+	// }
+}
+
 // Defaulted sets the resource defaults.
 func Defaulted(obj client.Object) {
 	switch obj := obj.(type) {
 	case *Builder:
 		defaultedBuilder(obj)
+	case *BuildQueue:
+		defaultedBuildQueue(obj)
 	}
 }

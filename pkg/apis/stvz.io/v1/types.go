@@ -22,72 +22,6 @@ import (
 
 // +kubebuilder:docs-gen:collapse=Go imports
 
-// PodSpec represents a modified corev1.PodSpec allowing modification of a limited subset of fields.
-type PodSpec struct {
-	// +optional
-	// +nullable
-	// List of volumes that can be mounted by containers belonging to the pod.
-	// More info: https://kubernetes.io/docs/concepts/storage/volumes
-	Volumes []corev1.Volume `json:"volumes,omitempty" patchStrategy:"merge,retainKeys" patchMergeKey:"name" protobuf:"bytes,1,rep,name=volumes"`
-	// +optional
-	// +nullable
-	// List of containers belonging to the pod.  There must be at least one container in a Pod.
-	// This is featured for the ability to add sidecars if needed.  The main process will always
-	// be injected into the pod as the first container and will have the name of `nats` (if the
-	// nats container does not exist).  Otherwise if a container called `nats` exists, then the
-	// container fields that are not defined will be merged in to the user defined container.
-	Containers []corev1.Container `json:"containers" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,2,rep,name=containers"`
-	// +optional
-	// +nullable
-	// List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing
-	// pod to perform user-initiated actions such as debugging. This list cannot be specified when
-	// creating a pod, and it cannot be modified by updating the pod spec. In order to add an
-	// ephemeral container to an existing pod, use the pod's ephemeralcontainers subresource.
-	EphemeralContainers []corev1.EphemeralContainer `json:"ephemeralContainers,omitempty" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,34,rep,name=ephemeralContainers"`
-	// +optional
-	// +nullable
-	// Optional duration in seconds the pod needs to terminate gracefully.
-	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty" protobuf:"varint,4,opt,name=terminationGracePeriodSeconds"`
-	// Optional duration in seconds the pod may be active on the node relative to
-	// StartTime before the system will actively try to mark it failed and kill associated containers.
-	// Value must be a positive integer.
-	// +optional
-	// +nullable
-	ActiveDeadlineSeconds *int64 `json:"activeDeadlineSeconds,omitempty" protobuf:"varint,5,opt,name=activeDeadlineSeconds"`
-	// NodeSelector is a selector which must be true for the pod to fit on a node.
-	// +optional
-	NodeSelector map[string]string `json:"nodeSelector,omitempty" protobuf:"bytes,7,rep,name=nodeSelector"`
-	// If specified, the pod's scheduling constraints
-	// +optional
-	Affinity *corev1.Affinity `json:"affinity,omitempty" protobuf:"bytes,18,opt,name=affinity"`
-	// If specified, the pod's tolerations.
-	// +optional
-	Tolerations []corev1.Toleration `json:"tolerations,omitempty" protobuf:"bytes,22,opt,name=tolerations"`
-	// If specified, indicates the pod's priority. Follows the format of the standard PriorityClassName
-	// defined in core/v1 PodSpec.
-	// https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
-	// +optional
-	PriorityClassName string `json:"priorityClassName,omitempty" protobuf:"bytes,24,opt,name=priorityClassName"`
-	// The priority value.  The higher the value, the higher the priority.
-	// +optional
-	Priority *int32 `json:"priority,omitempty" protobuf:"bytes,25,opt,name=priority"`
-	// PreemptionPolicy is the Policy for preempting pods with lower priority.
-	// +optional
-	PreemptionPolicy *corev1.PreemptionPolicy `json:"preemptionPolicy,omitempty" protobuf:"bytes,31,opt,name=preemptionPolicy"`
-	// ResourceClaims defines which ResourceClaims must be allocated
-	// and reserved before the Pod is allowed to start. The resources
-	// will be made available to those containers which consume them
-	// by name.
-	ResourceClaims []corev1.PodResourceClaim `json:"resourceClaims,omitempty" patchStrategy:"merge,retainKeys" patchMergeKey:"name" protobuf:"bytes,39,rep,name=resourceClaims"`
-}
-
-// PodTemplateSpec is the spec for a PodTemplateSpec resource.  We define our own
-// spec as a way to remove the confusion between the native PodTemplateSpec and the
-// stripped down version that we need for the BuildQueue.
-type PodTemplateSpec struct {
-	Spec PodSpec `json:"spec"`
-}
-
 // BuildQueueSpec is the spec for a BuildQueue resource. The BuildQueue currently
 // supports NATs in a single server configuration.  Under the hood, we'll use stateful
 // sets to manage pods in the cluster.  This will allow for us to come back through
@@ -99,21 +33,21 @@ type BuildQueueSpec struct {
 	// Replicas is the number of cluster nodes to add.  Currently, we only support a
 	// single node as we will not have the ability to cleanly update/restart.  In every
 	// case this will be overridden to 1.
-	Replicas *int `json:"replicas"`
+	Replicas *int32 `json:"replicas"`
 	// +optional
 	// +nullable
-	// Template is the pod template for the build queue.  There will be several fields
-	// that we will override regardless of the settings.  I will document those here as
-	// we get to them.  It would also be nice to log if the setting is being overriden
-	// just as a way to help with debugging, however, I don't really care about that yet.
-	// TODO: I may just make my own template spec and then copy the fields that I want
-	// to remove any confusion.
-	Template PodTemplateSpec `json:"template"`
+	// Version is the version of the NATs server to run.  This defaults to 2.10.4.
+	Version *string `json:"version"`
 	// +optional
 	// +nullable
-	// VolumeClaimTemplates is a list of claims that will be created for the build queue
-	// pod.
-	VolumeClaimTemplates []corev1.PersistentVolumeClaim `json:"volumeClaimTemplates,omitempty"`
+	// Resources is the resource limits and requests for the build queue pod(s).
+	Resources *corev1.ResourceRequirements `json:"resources"`
+	// +optional
+	// +nullable
+	// Volume is the persistent volume claim for the build queue.  If not defined
+	// then the build queue will only use in memory storage which will not persist
+	// across restarts.
+	Volume *corev1.PersistentVolumeClaim `json:"volume,omitempty"`
 }
 
 type BuildQueueStatus struct {
