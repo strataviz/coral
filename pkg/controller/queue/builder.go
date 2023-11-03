@@ -18,40 +18,44 @@ type DesiredState struct {
 
 // TODO: I think we need the queue resource here as well.
 func GetDesiredState(observed *ObservedState) (*DesiredState, error) {
+	config := NewNatsConfig(observed.buildQueue.Name, *observed.buildQueue.Spec.Replicas)
+
 	return &DesiredState{
-		StatefulSet:     getDesiredStatefulSetState(observed),
+		StatefulSet:     getDesiredStatefulSetState(observed, config),
 		HeadlessService: getDesiredHeadlessServiceState(observed),
 		Service:         getDesiredServiceState(observed),
-		ConfigMap:       getConfigMapState(observed),
+		ConfigMap:       getConfigMapState(observed, config),
 	}, nil
 }
 
-func getDesiredStatefulSetState(observed *ObservedState) *appsv1.StatefulSet {
+func getDesiredStatefulSetState(observed *ObservedState, config *NatsConfig) *appsv1.StatefulSet {
 	expected := observed.buildQueue.DeepCopy()
 
 	var startupProbe = &corev1.Probe{
 		ProbeHandler: corev1.ProbeHandler{
 			TCPSocket: &corev1.TCPSocketAction{
-				Port: intstr.FromInt(4222),
+				Port: intstr.FromInt(DefaultNatsPort),
 			},
 		},
-		InitialDelaySeconds: 75,
-		PeriodSeconds:       5,
+		InitialDelaySeconds: 10,
+		PeriodSeconds:       10,
 		TimeoutSeconds:      5,
 		FailureThreshold:    10,
+		SuccessThreshold:    1,
 	}
 
 	var readinessProbe = &corev1.Probe{
 		ProbeHandler: corev1.ProbeHandler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Path: "/healthz?js-server-only=true",
-				Port: intstr.FromInt(8222),
+				Port: intstr.FromInt(DefaultNatsMonitorPort),
 			},
 		},
-		InitialDelaySeconds: 60,
+		InitialDelaySeconds: 10,
 		PeriodSeconds:       10,
 		TimeoutSeconds:      5,
 		FailureThreshold:    3,
+		SuccessThreshold:    1,
 	}
 
 	var container = corev1.Container{
@@ -70,6 +74,8 @@ func getDesiredStatefulSetState(observed *ObservedState) *appsv1.StatefulSet {
 		Args: []string{
 			"--config",
 			"/etc/nats/nats.conf",
+			"--name",
+			"$(POD_NAME)",
 		},
 		Env: []corev1.EnvVar{
 			{
@@ -87,8 +93,9 @@ func getDesiredStatefulSetState(observed *ObservedState) *appsv1.StatefulSet {
 		},
 		// TODO: add additional ports when we add clustering support
 		Ports: []corev1.ContainerPort{
-			{ContainerPort: 8222, Name: "monitor"},
-			{ContainerPort: 4222, Name: "nats"},
+			{ContainerPort: DefaultNatsMonitorPort, Name: "monitor"},
+			{ContainerPort: DefaultNatsPort, Name: "nats"},
+			{ContainerPort: DefaultNatsClusterPort, Name: "cluster"},
 		},
 		Resources:      *expected.Spec.Resources,
 		StartupProbe:   startupProbe,
@@ -130,28 +137,9 @@ func getDesiredStatefulSetState(observed *ObservedState) *appsv1.StatefulSet {
 			Name:      "data",
 			MountPath: "/data/jetstream",
 		})
-
-		// initContainers = append(initContainers, corev1.Container{
-		// 	Name:  "init-chmod",
-		// 	Image: "busybox:1.35.0",
-		// 	Args: []string{
-		// 		"chown",
-		// 		"-R",
-		// 		"1000:1000",
-		// 		"/usr/share/opensearch/data",
-		// 	},
-		// 	SecurityContext: &corev1.SecurityContext{
-		// 		Privileged: &[]bool{true}[0],
-		// 	},
-		// 	VolumeMounts: []corev1.VolumeMount{
-		// 		{
-		// 			Name:      "data",
-		// 			MountPath: "/usr/share/opensearch/data",
-		// 		},
-		// 	},
-		// })
+		// TODO: May need to add an init container to chown the volume
 		claims = append(claims, *expected.Spec.Volume)
-		// TODO: Additional volumes for certs and config
+		// TODO: Add additional volumes for certs and config
 	}
 
 	return &appsv1.StatefulSet{
@@ -159,18 +147,16 @@ func getDesiredStatefulSetState(observed *ObservedState) *appsv1.StatefulSet {
 			Name:            fmt.Sprintf("%s-nats", expected.Name),
 			Namespace:       expected.Namespace,
 			OwnerReferences: getOwnerReferences(observed),
+			Annotations: map[string]string{
+				"config/checksum": config.Checksum(),
+			},
 		},
 		Spec: appsv1.StatefulSetSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{"buildqueue": expected.Name},
 			},
-			// TODO: readd update strategy once we start supporting clustering
-			// with controlled rolling updates.
-			// UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-			// 	Type: appsv1.OnDeleteStatefulSetStrategyType,
-			// },
+			ServiceName:         fmt.Sprintf("%s-nats-headless", expected.Name),
 			PodManagementPolicy: appsv1.ParallelPodManagement,
-			ServiceName:         fmt.Sprintf("%s-nats", expected.Name),
 			Replicas:            expected.Spec.Replicas,
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
@@ -195,21 +181,31 @@ func getDesiredStatefulSetState(observed *ObservedState) *appsv1.StatefulSet {
 func getDesiredHeadlessServiceState(observed *ObservedState) *corev1.Service {
 	expected := observed.buildQueue.DeepCopy()
 
-	return &corev1.Service{
+	svc := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:            fmt.Sprintf("%s-nats-headless", expected.Name),
 			Namespace:       expected.Namespace,
 			OwnerReferences: getOwnerReferences(observed),
 		},
 		Spec: corev1.ServiceSpec{
+			PublishNotReadyAddresses: true,
 			Ports: []corev1.ServicePort{
-				{Port: 8222, Name: "monitor"},
-				{Port: 4222, Name: "nats"},
+				{Port: DefaultNatsMonitorPort, Name: "monitor"},
+				{Port: DefaultNatsPort, Name: "nats"},
 			},
 			Selector:  map[string]string{"buildqueue": expected.Name},
 			ClusterIP: corev1.ClusterIPNone,
 		},
 	}
+
+	// Add the cluster port if we have more than one replica
+	if *expected.Spec.Replicas > 1 {
+		svc.Spec.Ports = append(svc.Spec.Ports, corev1.ServicePort{
+			Port: DefaultNatsClusterPort, Name: "cluster",
+		})
+	}
+
+	return svc
 }
 
 func getDesiredServiceState(observed *ObservedState) *corev1.Service {
@@ -230,7 +226,7 @@ func getDesiredServiceState(observed *ObservedState) *corev1.Service {
 	}
 }
 
-func getConfigMapState(observed *ObservedState) *corev1.ConfigMap {
+func getConfigMapState(observed *ObservedState, config *NatsConfig) *corev1.ConfigMap {
 	expected := observed.buildQueue.DeepCopy()
 
 	return &corev1.ConfigMap{
@@ -239,9 +235,7 @@ func getConfigMapState(observed *ObservedState) *corev1.ConfigMap {
 			Namespace:       expected.Namespace,
 			OwnerReferences: getOwnerReferences(observed),
 		},
-		Data: map[string]string{
-			"nats.conf": NatsConfig,
-		},
+		Data: config.GetConfigMapData(),
 	}
 }
 

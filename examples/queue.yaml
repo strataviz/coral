@@ -1,6 +1,14 @@
+---
 apiVersion: stvz.io/v1
 kind: BuildQueue
 metadata:
-  name: queue
+  name: single
 spec:
   replicas: 1
+---
+apiVersion: stvz.io/v1
+kind: BuildQueue
+metadata:
+  name: cluster
+spec:
+  replicas: 3
