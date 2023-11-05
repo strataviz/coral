@@ -1,9 +1,11 @@
 apiVersion: stvz.io/v1
-kind: Builder
+kind: WatchSet
 metadata:
   name: test
 spec:
   enabled: true
+  buildQueueRef:
+    name: single
   watches:
     - owner: strataviz
       repo: coral

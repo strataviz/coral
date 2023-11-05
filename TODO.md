@@ -7,3 +7,7 @@
   * [] There's still some internal dialog into whether or not I want to do environment installs inside the container (slow and probably buggy) or only support the images.
   * [] This also links into how we expose build commands (as builder.yaml files in the repo).  We could potentially add "custom" build commands and "packages".
   * [] Thinking about this more, we should probably not rely on builder.yaml files inside the repo, this would tightly couple the images to these.  Instead we could add some simple generic fields/etc to expose.  Then if the user wants to make things a bit more intricate by including a build file there, they can. I'd love to just be able to define a standard go image and build.
+
+* [] For each resource that is being created, copy in existing annotations, labels, and containers to account for environments that are injecting information or sidecars into their deployed applications.
+
+

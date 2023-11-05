@@ -88,65 +88,6 @@ type BuildQueueList struct {
 	Items           []BuildQueue `json:"items"`
 }
 
-// WatchSetSpec is the spec for a WatchSet resource.
-type WatchSetSpec struct {
-	// +optional
-	// +nullable
-	// Enabled globally enables or disables the builder respositories.  This
-	// defaults to true.
-	Enabled *bool `json:"enabled"`
-	// +optional
-	// +nullable
-	// Secret is the name of the secret resource that contains the credentials
-	// for accessing a git repository.  In the future, I'll pull this into vendor
-	// specific secrets.
-	SecretName *string `json:"secretName"`
-	// +optional
-	// +nullable
-	// Replicas is the number of replicas to run for the watch.
-	Replicas *int `json:"replicas"`
-}
-
-// WatchStatus is the status for a WatchSet resource.
-type WatchSetStatus struct {
-	// +optional
-	// Enabled indicates whether the watch is polling.
-	Enabled *bool `json:"enabled"`
-	// +optional
-	// ReadyReplicas is the number of ready replicas.
-	ReadyReplicas *int `json:"readyReplicas"`
-	// +optional
-	// Replicas is the total number of replicas.
-	Replicas *int `json:"replicas"`
-	// +optional
-	// UpdatedReplicas is the number of replicas that have been updated.
-	UpdatedReplicas *int `json:"updatedReplicas"`
-}
-
-// +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:defaulter-gen=true
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Namespaced,shortName=ws,singular=watchset
-// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-
-// WatchSet is a set of watches associated with the repository.
-type WatchSet struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              WatchSetSpec `json:"spec"`
-	// +optional
-	Status WatchSetStatus `json:"status"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-type WatchSetList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []WatchSet `json:"items"`
-}
-
 // On is the watch configuration for a git repository.
 type On struct {
 	// +optional
@@ -190,6 +131,93 @@ type Watch struct {
 	// +optional
 	// +nullable
 	On *On `json:"on"`
+}
+
+// WatchSetSpec is the spec for a WatchSet resource.
+type WatchSetSpec struct {
+	// +optional
+	// +nullable
+	// Enabled globally enables or disables the builder respositories.  This
+	// defaults to true.
+	Enabled *bool `json:"enabled"`
+	// +optional
+	// +nullable
+	// Secret is the name of the secret resource that contains the credentials
+	// for accessing a git repository.  In the future, I'll pull this into vendor
+	// specific secrets.
+	SecretName *string `json:"secretName"`
+	// +optional
+	// +nullable
+	// Replicas is the number of replicas to run for the watch.
+	Replicas *int32 `json:"replicas"`
+	// +optional
+	// +nullable
+	// Image is the image to use for the watch.  Under normal circumstances, this
+	// will be the same image that is generated from this service.  This does allow
+	// for the possibility of a custom watch image to be used and will be used during
+	// local development.
+	Image *string `json:"image"`
+	// +optional
+	// +nullable
+	// Command is the command to run for the watch.  Like images, this will not be
+	// used in normal circumstances, but does allow for local development and custom
+	// images.
+	Command *string `json:"command"`
+	// +optional
+	// +nullable
+	// Version is the version of the coral watcher to run.  This defaults to latest.
+	Version *string `json:"version"`
+	// +optional
+	// +nullable
+	// Resources is the resource limits and requests for the build queue pod(s).
+	Resources *corev1.ResourceRequirements `json:"resources"`
+	// +required
+	// BuildQueueRef is the reference to the build queue that will be used
+	// to stage build events for processing.
+	BuildQueueRef *corev1.ObjectReference `json:"buildQueueRef"`
+	// +required
+	// Watches is a list of repositories to watch.
+	Watches []Watch `json:"watches"`
+}
+
+// WatchStatus is the status for a WatchSet resource.
+type WatchSetStatus struct {
+	// +optional
+	// Enabled indicates whether the watch is polling.
+	Enabled *bool `json:"enabled"`
+	// +optional
+	// ReadyReplicas is the number of ready replicas.
+	ReadyReplicas *int `json:"readyReplicas"`
+	// +optional
+	// Replicas is the total number of replicas.
+	Replicas *int `json:"replicas"`
+	// +optional
+	// UpdatedReplicas is the number of replicas that have been updated.
+	UpdatedReplicas *int `json:"updatedReplicas"`
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:defaulter-gen=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Namespaced,shortName=ws,singular=watchset
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+
+// WatchSet is a set of watches associated with the repository.
+type WatchSet struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              WatchSetSpec `json:"spec"`
+	// +optional
+	Status WatchSetStatus `json:"status"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type WatchSetList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []WatchSet `json:"items"`
 }
 
 // BuilderSpec is the spec for a Builder resource.

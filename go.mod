@@ -1,6 +1,6 @@
 module stvz.io/coral
 
-go 1.21.0
+go 1.21.1
 
 require (
 	github.com/go-logr/logr v1.2.4
@@ -48,6 +48,7 @@ require (
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.10.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/stretchr/testify v1.8.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	golang.org/x/net v0.17.0 // indirect

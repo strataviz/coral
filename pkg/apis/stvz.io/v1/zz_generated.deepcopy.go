@@ -418,7 +418,32 @@ func (in *WatchSetSpec) DeepCopyInto(out *WatchSetSpec) {
 	}
 	if in.Replicas != nil {
 		in, out := &in.Replicas, &out.Replicas
-		*out = new(int)
+		*out = new(int32)
+		**out = **in
+	}
+	if in.Image != nil {
+		in, out := &in.Image, &out.Image
+		*out = new(string)
+		**out = **in
+	}
+	if in.Command != nil {
+		in, out := &in.Command, &out.Command
+		*out = new(string)
+		**out = **in
+	}
+	if in.Version != nil {
+		in, out := &in.Version, &out.Version
+		*out = new(string)
+		**out = **in
+	}
+	if in.Resources != nil {
+		in, out := &in.Resources, &out.Resources
+		*out = new(corev1.ResourceRequirements)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.BuildQueueRef != nil {
+		in, out := &in.BuildQueueRef, &out.BuildQueueRef
+		*out = new(corev1.ObjectReference)
 		**out = **in
 	}
 }

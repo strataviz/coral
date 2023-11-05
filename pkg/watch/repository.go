@@ -1,10 +1,9 @@
-package repository
+package watch
 
 import (
 	"context"
 
 	"github.com/go-logr/logr"
-	"k8s.io/client-go/tools/record"
 )
 
 type Repository interface {
@@ -18,5 +17,4 @@ type Opts struct {
 	Repo                string
 	Token               string
 	Logger              logr.Logger
-	EventRecorder       record.EventRecorder
 }

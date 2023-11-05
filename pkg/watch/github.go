@@ -1,4 +1,4 @@
-package github
+package watch
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/google/go-github/v56/github"
 	"golang.org/x/oauth2"
-	"stvz.io/coral/pkg/repository"
 )
 
 type Github struct {
@@ -23,7 +22,7 @@ type Github struct {
 	sync.Mutex
 }
 
-func New(opts *repository.Opts) repository.Repository {
+func NewGithubRepo(opts *Opts) Repository {
 	return &Github{
 		token:               opts.Token,
 		log:                 opts.Logger,

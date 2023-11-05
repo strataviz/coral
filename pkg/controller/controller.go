@@ -2,8 +2,8 @@ package controller
 
 import (
 	ctrl "sigs.k8s.io/controller-runtime"
-	builder "stvz.io/coral/pkg/controller/builder"
-	"stvz.io/coral/pkg/controller/queue"
+	"stvz.io/coral/pkg/controller/buildqueue"
+	"stvz.io/coral/pkg/controller/watchset"
 )
 
 type ControllerOpts struct{}
@@ -11,11 +11,11 @@ type ControllerOpts struct{}
 type Controller struct{}
 
 func SetupWithManager(mgr ctrl.Manager) (err error) {
-	if err = builder.SetupWithManager(mgr); err != nil {
+	if err = watchset.SetupWithManager(mgr); err != nil {
 		return
 	}
 
-	if err = queue.SetupWithManager(mgr); err != nil {
+	if err = buildqueue.SetupWithManager(mgr); err != nil {
 		return
 	}
 

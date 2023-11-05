@@ -1,17 +1,15 @@
-package builder
+package watch
 
 import (
 	"context"
 	"sync"
 
 	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
-	"stvz.io/coral/pkg/repository"
-	"stvz.io/coral/pkg/repository/github"
 )
 
 // Manager is a collection of repositories that will be watched by the builder.
 type Manager struct {
-	repositories map[string]repository.Repository
+	repositories map[string]Repository
 
 	wg       sync.WaitGroup
 	syncOnce sync.Once
@@ -21,7 +19,7 @@ type Manager struct {
 // New returns a new Manager.
 func NewManager() *Manager {
 	return &Manager{
-		repositories: make(map[string]repository.Repository),
+		repositories: make(map[string]Repository),
 	}
 }
 
@@ -50,7 +48,7 @@ func (m *Manager) AddWatch(ctx context.Context, token string, watch stvziov1.Wat
 		r.Stop()
 	}
 
-	watcher := github.New(&repository.Opts{
+	watcher := NewGithubRepo(&Opts{
 		PollIntervalSeconds: *watch.On.PollIntervalSeconds,
 		Owner:               *watch.Owner,
 		Repo:                *watch.Repo,

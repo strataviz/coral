@@ -33,44 +33,45 @@ const (
 	DefaultWatchDryRun              bool          = false
 	DefaultBuilderEnabled           bool          = true
 
-	DefaultBuildQueueResourcesCPU    string = "200m"
-	DefaultBuildQueueResourcesMemory string = "512Mi"
+	DefaultResourcesCPU    string = "200m"
+	DefaultResourcesMemory string = "512Mi"
 )
 
 var (
 	DefaultWatchBranches = []string{"main", "master"}
 )
 
-// defaultedBuilder defaults a Builder object
-func defaultedBuilder(obj *Builder) {
-	if obj.Spec.Enabled == nil {
-		obj.Spec.Enabled = new(bool)
-		*obj.Spec.Enabled = DefaultBuilderEnabled
+func defaultedBuildQueue(obj *BuildQueue) {
+	if obj.Spec.Version == nil {
+		obj.Spec.Version = new(string)
+		*obj.Spec.Version = "2.10.4-alpine"
 	}
 
-	if obj.Spec.SecretName == nil {
-		obj.Spec.SecretName = new(string)
-		*obj.Spec.SecretName = "coral-github-token"
+	if obj.Spec.Resources == nil {
+		obj.Spec.Resources = &corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				corev1.ResourceCPU:    resource.MustParse(DefaultResourcesCPU),
+				corev1.ResourceMemory: resource.MustParse(DefaultResourcesMemory),
+			},
+		}
 	}
 
-	for _, repo := range obj.Spec.Watches {
-		defaultedWatch(&repo)
-	}
-}
-
-// defaultedWatch defaults a Watch object
-func defaultedWatch(obj *Watch) {
-	if obj.DryRun == nil {
-		obj.DryRun = new(bool)
-		*obj.DryRun = DefaultWatchDryRun
-	}
-
-	if obj.Enabled == nil {
-		obj.Enabled = new(bool)
-		*obj.Enabled = DefaultWatchEnabled
-	}
-
-	defaultedOn(obj.On)
+	// if obj.Spec.Volume == nil {
+	// 	obj.Spec.Volume = &corev1.PersistentVolumeClaim{
+	// 		ObjectMeta: metav1.ObjectMeta{
+	// 			Name:      fmt.Sprintf("%s-data", obj.Name),
+	// 			Namespace: obj.Namespace,
+	// 		},
+	// 		Spec: corev1.PersistentVolumeClaimSpec{
+	// 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+	// 			Resources: corev1.ResourceRequirements{
+	// 				corev1.ResourceList{
+	// 					corev1.ResourceStorage: resource.MustParse("1Gi"),
+	// 				},
+	// 			},
+	// 		},
+	// 	}
+	// }
 }
 
 // defaultedOn defaults an On object
@@ -103,45 +104,57 @@ func defaultedOn(obj *On) {
 	}
 }
 
-func defaultedBuildQueue(obj *BuildQueue) {
+// defaultedWatch defaults a Watch object
+func defaultedWatch(obj *Watch) {
+	if obj.DryRun == nil {
+		obj.DryRun = new(bool)
+		*obj.DryRun = DefaultWatchDryRun
+	}
+
+	if obj.Enabled == nil {
+		obj.Enabled = new(bool)
+		*obj.Enabled = DefaultWatchEnabled
+	}
+
+	defaultedOn(obj.On)
+}
+
+func defaultedWatchSet(obj *WatchSet) {
 	if obj.Spec.Version == nil {
 		obj.Spec.Version = new(string)
-		*obj.Spec.Version = "2.10.4-alpine"
+		*obj.Spec.Version = "latest"
+	}
+
+	if obj.Spec.Command == nil {
+		obj.Spec.Command = new(string)
+		*obj.Spec.Command = "/usr/bin/coral"
+	}
+
+	if obj.Spec.Image == nil {
+		obj.Spec.Image = new(string)
+		*obj.Spec.Image = "docker.io/strataviz/coral"
 	}
 
 	if obj.Spec.Resources == nil {
 		obj.Spec.Resources = &corev1.ResourceRequirements{
 			Requests: corev1.ResourceList{
-				corev1.ResourceCPU:    resource.MustParse(DefaultBuildQueueResourcesCPU),
-				corev1.ResourceMemory: resource.MustParse(DefaultBuildQueueResourcesMemory),
+				corev1.ResourceCPU:    resource.MustParse(DefaultResourcesCPU),
+				corev1.ResourceMemory: resource.MustParse(DefaultResourcesMemory),
 			},
 		}
 	}
 
-	// if obj.Spec.Volume == nil {
-	// 	obj.Spec.Volume = &corev1.PersistentVolumeClaim{
-	// 		ObjectMeta: metav1.ObjectMeta{
-	// 			Name:      fmt.Sprintf("%s-data", obj.Name),
-	// 			Namespace: obj.Namespace,
-	// 		},
-	// 		Spec: corev1.PersistentVolumeClaimSpec{
-	// 			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-	// 			Resources: corev1.ResourceRequirements{
-	// 				corev1.ResourceList{
-	// 					corev1.ResourceStorage: resource.MustParse("1Gi"),
-	// 				},
-	// 			},
-	// 		},
-	// 	}
-	// }
+	for _, repo := range obj.Spec.Watches {
+		defaultedWatch(&repo)
+	}
 }
 
 // Defaulted sets the resource defaults.
 func Defaulted(obj client.Object) {
 	switch obj := obj.(type) {
-	case *Builder:
-		defaultedBuilder(obj)
 	case *BuildQueue:
 		defaultedBuildQueue(obj)
+	case *WatchSet:
+		defaultedWatchSet(obj)
 	}
 }

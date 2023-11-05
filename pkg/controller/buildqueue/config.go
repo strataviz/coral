@@ -1,4 +1,4 @@
-package queue
+package buildqueue
 
 import (
 	"crypto/sha256"
