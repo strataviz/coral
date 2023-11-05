@@ -45,14 +45,7 @@ func SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=configmaps/status,verbs=get
 
-// Reconcile is the main controller loop for the queue controller.  Though it's more
-// flexible to have a seperate controller for the queue, this does raise the issue of
-// potential issues if the queue has been deleted but the builder is still running.
-// For now, I'll just make the assumption that once we validate that the queue exists
-// when the builder starts, that we won't have to check again and if the queue is
-// deleted then we'll let the builder continue to run and fail once it tries to
-// produce or consume from the queue.  We'll be able to capture this state in metrics
-// and alert on it.
+// Reconcile is the main controller loop for the queue controller.
 func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
