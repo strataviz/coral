@@ -7,6 +7,24 @@ rules:
 - apiGroups:
   - apps
   resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments/status
+  verbs:
+  - get
+- apiGroups:
+  - apps
+  resources:
   - statefulsets
   verbs:
   - create
@@ -43,55 +61,17 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - jobs
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - jobs/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - ""
-  resources:
-  - jobs/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - ""
-  resources:
   - pods
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
-- apiGroups:
-  - ""
-  resources:
-  - pods/finalizers
-  verbs:
-  - update
 - apiGroups:
   - ""
   resources:
   - pods/status
   verbs:
   - get
-  - patch
-  - update
 - apiGroups:
   - ""
   resources:
@@ -121,32 +101,6 @@ rules:
 - apiGroups:
   - stvz.io
   resources:
-  - builders
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - stvz.io
-  resources:
-  - builders/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - stvz.io
-  resources:
-  - builders/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - stvz.io
-  resources:
   - buildqueues
   verbs:
   - create
@@ -166,6 +120,58 @@ rules:
   - stvz.io
   resources:
   - buildqueues/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - stvz.io
+  resources:
+  - buildset
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - stvz.io
+  resources:
+  - buildset/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - stvz.io
+  resources:
+  - buildset/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - stvz.io
+  resources:
+  - watchset
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - stvz.io
+  resources:
+  - watchset/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - stvz.io
+  resources:
+  - watchset/status
   verbs:
   - get
   - patch

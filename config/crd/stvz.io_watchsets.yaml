@@ -101,8 +101,47 @@ spec:
               version:
                 nullable: true
                 type: string
+              watches:
+                items:
+                  properties:
+                    dryRun:
+                      nullable: true
+                      type: boolean
+                    enabled:
+                      nullable: true
+                      type: boolean
+                    "on":
+                      nullable: true
+                      properties:
+                        branches:
+                          items:
+                            type: string
+                          type: array
+                        maxAge:
+                          type: string
+                        pollIntervalSeconds:
+                          type: integer
+                        releases:
+                          items:
+                            type: string
+                          type: array
+                        tags:
+                          items:
+                            type: string
+                          type: array
+                      type: object
+                    owner:
+                      type: string
+                    repo:
+                      type: string
+                  required:
+                  - owner
+                  - repo
+                  type: object
+                type: array
             required:
             - buildQueueRef
+            - watches
             type: object
           status:
             properties:
