@@ -1,4 +1,4 @@
-package watchset
+package buildset
 
 import (
 	"context"
@@ -33,16 +33,15 @@ func SetupWithManager(mgr ctrl.Manager) error {
 		Complete(c)
 }
 
-// +kubebuilder:rbac:groups=stvz.io,resources=watchsets,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=stvz.io,resources=watchsets/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=stvz.io,resources=watchsets/finalizers,verbs=update
+// +kubebuilder:rbac:groups=stvz.io,resources=buildsets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=stvz.io,resources=buildsets/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=stvz.io,resources=buildsets/finalizers,verbs=update
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core,resources=services/status,verbs=get
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
 // +kubebuilder:rbac:groups=core,resources=pods/status,verbs=get
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
 
 // Reconcile is the main controller loop for the queue controller.
 func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -61,12 +60,12 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 	}
 
 	logger.Info("observed",
-		"watchSet", observed.watchSet,
+		"buildSet", observed.buildSet,
 		"deployment", observed.deployment,
 	)
 
-	if observed.watchSet == nil {
-		logger.Info("watchSet has been deleted, cleaning up", "request", req)
+	if observed.buildSet == nil {
+		logger.Info("buildSet has been deleted, cleaning up", "request", req)
 		return ctrl.Result{}, nil
 	}
 

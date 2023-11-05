@@ -127,7 +127,7 @@ rules:
 - apiGroups:
   - stvz.io
   resources:
-  - buildset
+  - buildsets
   verbs:
   - create
   - delete
@@ -139,13 +139,13 @@ rules:
 - apiGroups:
   - stvz.io
   resources:
-  - buildset/finalizers
+  - buildsets/finalizers
   verbs:
   - update
 - apiGroups:
   - stvz.io
   resources:
-  - buildset/status
+  - buildsets/status
   verbs:
   - get
   - patch
@@ -153,7 +153,7 @@ rules:
 - apiGroups:
   - stvz.io
   resources:
-  - watchset
+  - watchsets
   verbs:
   - create
   - delete
@@ -165,13 +165,13 @@ rules:
 - apiGroups:
   - stvz.io
   resources:
-  - watchset/finalizers
+  - watchsets/finalizers
   verbs:
   - update
 - apiGroups:
   - stvz.io
   resources:
-  - watchset/status
+  - watchsets/status
   verbs:
   - get
   - patch

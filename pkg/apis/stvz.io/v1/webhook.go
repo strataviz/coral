@@ -27,41 +27,59 @@ import (
 // +kubebuilder:webhook:verbs=create;update,path=/mutate-stvz-io-v1-builder,mutating=true,failurePolicy=fail,groups=stvz.io,resources=builders,versions=v1,name=mbuilder.stvz.io,admissionReviewVersions=v1,sideEffects=none
 // +kubebuilder:webhook:verbs=create;update,path=/validate-stvz-io-v1-builder,mutating=false,failurePolicy=fail,groups=stvz.io,resources=builders,versions=v1,name=vbuilder.stvz.io,admissionReviewVersions=v1,sideEffects=none
 
-// SetupWebhookWithManager adds webhook for Builder.
-func (b *Builder) SetupWebhookWithManager(mgr ctrl.Manager) error {
+// SetupWebhookWithManager adds webhook for BuildSet.
+func (b *BuildSet) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(b).
 		Complete()
 }
 
-func (b *Builder) Default() {
+func (b *BuildSet) Default() {
 	Defaulted(b)
 }
 
 // ValidateCreate implements webhook Validator.
-func (b *Builder) ValidateCreate() (admission.Warnings, error) {
-	// TODO: check to see if the secret exists, then grab the credentials to make
-	// sure that everything is defined correctly.
-
-	// TODO: actually go out to github and see if we have access to the repo and if
-	// it exists.  We should be able to do that if we have the credentials.
+func (b *BuildSet) ValidateCreate() (admission.Warnings, error) {
 	return admission.Warnings{}, nil
 }
 
 // ValidateUpdate implements webhook Validator.
-func (b *Builder) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	// TODO: check to see if the secret exists, then grab the credentials to make
-	// sure that everything is defined correctly.
-
-	// TODO: actually go out to github and see if we have access to the repo and if
-	// it exists.  We should be able to do that if we have the credentials.
+func (b *BuildSet) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	return admission.Warnings{}, nil
 }
 
 // ValidateDelete implements webhook Validator.
-func (b *Builder) ValidateDelete() (admission.Warnings, error) {
+func (b *BuildSet) ValidateDelete() (admission.Warnings, error) {
 	return nil, nil
 }
 
-var _ webhook.Defaulter = &Builder{}
-var _ webhook.Validator = &Builder{}
+// SetupWebhookWithManager adds webhook for BuildSet.
+func (w *WatchSet) SetupWebhookWithManager(mgr ctrl.Manager) error {
+	return ctrl.NewWebhookManagedBy(mgr).
+		For(w).
+		Complete()
+}
+
+func (w *WatchSet) Default() {
+	Defaulted(w)
+}
+
+// ValidateCreate implements webhook Validator.
+func (w *WatchSet) ValidateCreate() (admission.Warnings, error) {
+	return admission.Warnings{}, nil
+}
+
+// ValidateUpdate implements webhook Validator.
+func (w *WatchSet) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
+	return admission.Warnings{}, nil
+}
+
+// ValidateDelete implements webhook Validator.
+func (w *WatchSet) ValidateDelete() (admission.Warnings, error) {
+	return nil, nil
+}
+
+var _ webhook.Defaulter = &BuildSet{}
+var _ webhook.Defaulter = &WatchSet{}
+var _ webhook.Validator = &BuildSet{}
+var _ webhook.Validator = &WatchSet{}

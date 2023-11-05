@@ -79,8 +79,13 @@ func (c *Controller) RunE(cmd *cobra.Command, args []string) error {
 		os.Exit(1)
 	}
 
-	if err = (&v1.Builder{}).SetupWebhookWithManager(mgr); err != nil {
-		log.Error(err, "unable to create webhook", "webhook", "Builder")
+	if err = (&v1.BuildSet{}).SetupWebhookWithManager(mgr); err != nil {
+		log.Error(err, "unable to create webhook", "webhook", "BuildSet")
+		os.Exit(1)
+	}
+
+	if err = (&v1.WatchSet{}).SetupWebhookWithManager(mgr); err != nil {
+		log.Error(err, "unable to create webhook", "webhook", "WatchSet")
 		os.Exit(1)
 	}
 

@@ -220,8 +220,8 @@ type WatchSetList struct {
 	Items           []WatchSet `json:"items"`
 }
 
-// BuilderSpec is the spec for a Builder resource.
-type BuilderSpec struct {
+// BuildSetSpec is the spec for a BuildSet resource.
+type BuildSetSpec struct {
 	// +optional
 	// +nullable
 	// Enabled globally enables or disables the builder respositories.  This
@@ -229,56 +229,71 @@ type BuilderSpec struct {
 	Enabled *bool `json:"enabled"`
 	// +optional
 	// +nullable
-	// Secret is the name of the secret resource that contains the credentials
-	// for accessing a git repository.  In the future, I'll pull this into vendor
-	// specific secrets.
-	SecretName *string `json:"secretName"`
-	// +required
-	// Watches is a list of repositories to watch.
-	Watches []Watch `json:"watches"`
+	// Replicas is the number of replicas to run for the watch.
+	Replicas *int32 `json:"replicas"`
 	// +optional
 	// +nullable
-	// BuildQueueRef is the name of the build queue to use for streaming build
-	// events between the watchers and builders.  If this is not set, the controller
-	// will attempt to discover the build queue.  The first search will be for a
-	// build queue with the same name as the builder.  If that is not found, then
-	// a search for build queue called default within the same namespace as the
-	// builder will be performed.  If that is not found, then the controller will
-	// select the first build queue it finds in the builder's namespace.  If no
-	// build queue is found then the apply will fail.
-	// TODO: set up the webhook to validate that the build queue exists.
-	BuildQueueRef *corev1.LocalObjectReference `json:"buildQueueRef"`
+	// Image is the image to use for the watch.  Under normal circumstances, this
+	// will be the same image that is generated from this service.  This does allow
+	// for the possibility of a custom watch image to be used and will be used during
+	// local development.
+	Image *string `json:"image"`
+	// +optional
+	// +nullable
+	// Command is the command to run for the watch.  Like images, this will not be
+	// used in normal circumstances, but does allow for local development and custom
+	// images.
+	Command *string `json:"command"`
+	// +optional
+	// +nullable
+	// Version is the version of the coral watcher to run.  This defaults to latest.
+	Version *string `json:"version"`
+	// +required
+	// BuildQueueRef is the reference to the build queue that will be used
+	// to stage build events for processing.
+	BuildQueueRef *corev1.ObjectReference `json:"buildQueueRef"`
+	// +optional
+	// +nullable
+	// Resources is the resource limits and requests for the build queue pod(s).
+	Resources *corev1.ResourceRequirements `json:"resources"`
 }
 
-// BuilderStatus is the status for a Builder resource.
-type BuilderStatus struct {
+// BuildSetStatus is the status for a WatchSet resource.
+type BuildSetStatus struct {
 	// +optional
-	// Builds is the number of builds that have been kicked off.
-	Builds *int64 `json:"builds"`
+	// Enabled indicates whether the watch is polling.
+	Enabled *bool `json:"enabled"`
+	// +optional
+	// ReadyReplicas is the number of ready replicas.
+	ReadyReplicas *int `json:"readyReplicas"`
+	// +optional
+	// Replicas is the total number of replicas.
+	Replicas *int `json:"replicas"`
+	// +optional
+	// UpdatedReplicas is the number of replicas that have been updated.
+	UpdatedReplicas *int `json:"updatedReplicas"`
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +k8s:defaulter-gen=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Namespaced,shortName=br,singular=builder
+// +kubebuilder:resource:scope=Namespaced,shortName=bs,singular=buildset
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
-// Builder represents a service that watches for changes to a git repository and
-// launches a build when a change is detected.
-type Builder struct {
+// BuildSet is a set of pods that build images based on recieved events.
+type BuildSet struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              BuilderSpec `json:"spec"`
+	Spec              BuildSetSpec `json:"spec"`
 	// +optional
-	Status BuilderStatus `json:"status"`
+	Status BuildSetStatus `json:"status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// BuilderList is a list of Builder resources.
-type BuilderList struct {
+type BuildSetList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Builder `json:"items"`
+	Items           []BuildSet `json:"items"`
 }

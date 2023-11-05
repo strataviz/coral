@@ -149,6 +149,9 @@ func defaultedWatchSet(obj *WatchSet) {
 	}
 }
 
+func defaultedBuildSet(obj *BuildSet) {
+}
+
 // Defaulted sets the resource defaults.
 func Defaulted(obj client.Object) {
 	switch obj := obj.(type) {
@@ -156,5 +159,7 @@ func Defaulted(obj client.Object) {
 		defaultedBuildQueue(obj)
 	case *WatchSet:
 		defaultedWatchSet(obj)
+	case *BuildSet:
+		defaultedBuildSet(obj)
 	}
 }

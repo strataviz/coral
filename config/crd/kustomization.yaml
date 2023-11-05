@@ -6,6 +6,6 @@ commonAnnotations:
   strata.ctx.sh/license: "Apache"
   strata.ctx.sh/support: "https://github.com/strataviz/coral/issues"
 resources:
-  - stvz.io_builders.yaml
   - stvz.io_buildqueues.yaml
   - stvz.io_watchsets.yaml
+  - stvz.io_buildsets.yaml

@@ -51,8 +51,10 @@ var (
 // addKnownTypes adds a list of known types to the scheme
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&Builder{},
-		&BuilderList{},
+		&BuildSet{},
+		&BuildSetList{},
+		&WatchSet{},
+		&WatchSetList{},
 		&BuildQueue{},
 		&BuildQueueList{},
 	)
