@@ -33,9 +33,9 @@ func SetupWithManager(mgr ctrl.Manager) error {
 		Complete(c)
 }
 
-// +kubebuilder:rbac:groups=stvz.io,resources=buildqueues,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=stvz.io,resources=buildqueues/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=stvz.io,resources=buildqueues/finalizers,verbs=update
+// +kubebuilder:rbac:groups=stvz.io,resources=watchset,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=stvz.io,resources=watchset/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=stvz.io,resources=watchset/finalizers,verbs=update
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;patch;delete
