@@ -1,0 +1,123 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.13.0
+  name: images.stvz.io
+spec:
+  group: stvz.io
+  names:
+    kind: Image
+    listKind: ImageList
+    plural: images
+    shortNames:
+    - img
+    singular: images
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: The number of nodes that should have the image prefetched
+      jsonPath: .status.totalNodes
+      name: Total
+      type: integer
+    - description: The number of nodes that have successfully fetched all tags
+      jsonPath: .status.availableNodes
+      name: Available
+      type: integer
+    - description: The number of nodes that are pending fetchs of 1 or more tags
+      jsonPath: .status.pendingNodes
+      name: Pending
+      type: integer
+    - description: The number of nodes where images are waiting to be removed
+      jsonPath: .status.deletingNodes
+      name: Deleting
+      type: integer
+    - description: The number of nodes where the images are in an unknown state
+      jsonPath: .status.unknownNodes
+      name: Unknown
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              enabled:
+                type: boolean
+              images:
+                items:
+                  properties:
+                    name:
+                      type: string
+                    tags:
+                      items:
+                        type: string
+                      maxItems: 100
+                      minItems: 1
+                      type: array
+                  required:
+                  - name
+                  - tags
+                  type: object
+                type: array
+              managePullPolicies:
+                type: boolean
+              pollInterval:
+                type: string
+              registry:
+                nullable: true
+                properties:
+                  url:
+                    type: string
+                required:
+                - url
+                type: object
+              selector:
+                items:
+                  properties:
+                    key:
+                      type: string
+                    operator:
+                      type: string
+                    values:
+                      items:
+                        type: string
+                      type: array
+                  required:
+                  - key
+                  - operator
+                  - values
+                  type: object
+                nullable: true
+                type: array
+            type: object
+          status:
+            properties:
+              availableNodes:
+                type: integer
+              deletingNodes:
+                type: integer
+              pendingNodes:
+                type: integer
+              totalNodes:
+                type: integer
+              unknownNodes:
+                type: integer
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

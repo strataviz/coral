@@ -36,12 +36,12 @@ func (r *Root) Command() *cobra.Command {
 		Long:    RootLongDesc,
 		Version: build.Version,
 		Run: func(cmd *cobra.Command, args []string) {
-			cmd.Help()
+			_ = cmd.Help()
 		},
 	}
 
 	rootCmd.PersistentFlags().StringP("kubeconfig", "", "", "path to kubeconfig file")
 	rootCmd.AddCommand(NewController().Command())
-	rootCmd.AddCommand(NewWatch().Command())
+	rootCmd.AddCommand(NewWorker().Command())
 	return rootCmd
 }

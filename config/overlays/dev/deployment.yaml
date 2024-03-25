@@ -22,6 +22,11 @@ spec:
           image: docker.io/golang:latest
           imagePullPolicy: IfNotPresent
           workingDir: /usr/src/app
+          env:
+          - name: CORAL_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
           command:
             - sleep
             - infinity
@@ -40,8 +45,7 @@ spec:
       volumes:
         - name: app
           hostPath:
-            # TODO: this should be configurable based on the developer's environment.
-            path: /mnt/github.com/strataviz/coral
+            path: /app
         - name: tls
           secret:
             secretName: coral-webhook-cert

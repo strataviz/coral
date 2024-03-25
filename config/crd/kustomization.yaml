@@ -2,10 +2,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: coral
 commonAnnotations:
-  strata.ctx.sh/authors: "StrataViz"
-  strata.ctx.sh/license: "Apache"
-  strata.ctx.sh/support: "https://github.com/strataviz/coral/issues"
+  strata.stvz.io/authors: "StrataViz"
+  strata.stvz.io/license: "Apache"
+  strata.stvz.io/support: "https://github.com/strataviz/coral/issues"
 resources:
-  - stvz.io_buildqueues.yaml
-  - stvz.io_watchsets.yaml
-  - stvz.io_buildsets.yaml
+  - stvz.io_images.yaml

@@ -16,6 +16,8 @@ package v1
 // +kubebuilder:docs-gen:collapse=Apache License
 
 import (
+	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -24,62 +26,89 @@ import (
 
 // +kubebuilder:docs-gen:collapse=Go imports
 
-// +kubebuilder:webhook:verbs=create;update,path=/mutate-stvz-io-v1-builder,mutating=true,failurePolicy=fail,groups=stvz.io,resources=builders,versions=v1,name=mbuilder.stvz.io,admissionReviewVersions=v1,sideEffects=none
-// +kubebuilder:webhook:verbs=create;update,path=/validate-stvz-io-v1-builder,mutating=false,failurePolicy=fail,groups=stvz.io,resources=builders,versions=v1,name=vbuilder.stvz.io,admissionReviewVersions=v1,sideEffects=none
+// +kubebuilder:webhook:verbs=create;update,path=/mutate-stvz-io-v1-image,mutating=true,failurePolicy=fail,groups=stvz.io,resources=images,versions=v1,name=mimage.stvz.io,admissionReviewVersions=v1,sideEffects=none
+// +kubebuilder:webhook:verbs=create;update,path=/validate-stvz-io-v1-image,mutating=false,failurePolicy=fail,groups=stvz.io,resources=images,versions=v1,name=vimage.stvz.io,admissionReviewVersions=v1,sideEffects=none
 
 // SetupWebhookWithManager adds webhook for BuildSet.
-func (b *BuildSet) SetupWebhookWithManager(mgr ctrl.Manager) error {
+func (i *Image) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
-		For(b).
+		For(i).
 		Complete()
 }
 
-func (b *BuildSet) Default() {
-	Defaulted(b)
+func (i *Image) Default() {
+	Defaulted(i)
+}
+
+func validateSpecImages(images []ImageSpecImages) (admission.Warnings, error) {
+	warnings := make(admission.Warnings, 0)
+
+	for _, image := range images {
+		if image.Name == nil {
+			return warnings, fmt.Errorf("name must be specified")
+		}
+
+		if len(image.Tags) < 1 {
+			return warnings, fmt.Errorf("at least one tag must be specified")
+		}
+
+		tags := make(map[string]bool)
+		duplicates := make([]string, 0)
+		for _, tag := range image.Tags {
+			if tag == "latest" {
+				warnings = append(warnings, "tag 'latest' is not supported and will be ignored")
+				continue
+			}
+
+			if _, ok := tags[tag]; ok {
+				duplicates = append(duplicates, tag)
+			} else {
+				tags[tag] = true
+			}
+		}
+
+		if len(duplicates) > 0 {
+			return warnings, fmt.Errorf("duplicate tags found: %v", duplicates)
+		}
+	}
+
+	return warnings, nil
+}
+
+func validateSpec(spec ImageSpec) (admission.Warnings, error) {
+	return validateSpecImages(spec.Images)
 }
 
 // ValidateCreate implements webhook Validator.
-func (b *BuildSet) ValidateCreate() (admission.Warnings, error) {
-	return admission.Warnings{}, nil
+func (i *Image) ValidateCreate() (admission.Warnings, error) {
+	warnings := make(admission.Warnings, 0)
+
+	specWarnings, err := validateSpec(i.Spec)
+	if err != nil {
+		return warnings, err
+	}
+
+	warnings = append(warnings, specWarnings...)
+	return warnings, nil
 }
 
 // ValidateUpdate implements webhook Validator.
-func (b *BuildSet) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	return admission.Warnings{}, nil
+func (i *Image) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
+	warnings := make(admission.Warnings, 0)
+
+	specWarnings, err := validateSpec(i.Spec)
+	if err != nil {
+		return warnings, err
+	}
+
+	warnings = append(warnings, specWarnings...)
+	return warnings, nil
 }
 
 // ValidateDelete implements webhook Validator.
-func (b *BuildSet) ValidateDelete() (admission.Warnings, error) {
+func (i *Image) ValidateDelete() (admission.Warnings, error) {
 	return nil, nil
 }
 
-// SetupWebhookWithManager adds webhook for BuildSet.
-func (w *WatchSet) SetupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).
-		For(w).
-		Complete()
-}
-
-func (w *WatchSet) Default() {
-	Defaulted(w)
-}
-
-// ValidateCreate implements webhook Validator.
-func (w *WatchSet) ValidateCreate() (admission.Warnings, error) {
-	return admission.Warnings{}, nil
-}
-
-// ValidateUpdate implements webhook Validator.
-func (w *WatchSet) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
-	return admission.Warnings{}, nil
-}
-
-// ValidateDelete implements webhook Validator.
-func (w *WatchSet) ValidateDelete() (admission.Warnings, error) {
-	return nil, nil
-}
-
-var _ webhook.Defaulter = &BuildSet{}
-var _ webhook.Defaulter = &WatchSet{}
-var _ webhook.Validator = &BuildSet{}
-var _ webhook.Validator = &WatchSet{}
+var _ webhook.Defaulter = &Image{}
+var _ webhook.Validator = &Image{}

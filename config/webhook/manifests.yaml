@@ -10,9 +10,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-stvz-io-v1-builder
+      path: /mutate-stvz-io-v1-image
   failurePolicy: Fail
-  name: mbuilder.stvz.io
+  name: mimage.stvz.io
   rules:
   - apiGroups:
     - stvz.io
@@ -22,7 +22,7 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - builders
+    - images
   sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
@@ -36,9 +36,9 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-stvz-io-v1-builder
+      path: /validate-stvz-io-v1-image
   failurePolicy: Fail
-  name: vbuilder.stvz.io
+  name: vimage.stvz.io
   rules:
   - apiGroups:
     - stvz.io
@@ -48,5 +48,5 @@ webhooks:
     - CREATE
     - UPDATE
     resources:
-    - builders
+    - images
   sideEffects: None

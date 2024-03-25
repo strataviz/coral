@@ -51,12 +51,8 @@ var (
 // addKnownTypes adds a list of known types to the scheme
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&BuildSet{},
-		&BuildSetList{},
-		&WatchSet{},
-		&WatchSetList{},
-		&BuildQueue{},
-		&BuildQueueList{},
+		&Image{},
+		&ImageList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

@@ -1,13 +1,30 @@
-# TODO
-* [] Build watcher updates when the secret changes.
-* [] Move to cobra arguments so we can sepearate the coral components.
-  * [] I think we need at least a controller and sync command.
-* [] Wire up the builder watch polling and test it out.
-* [] Introduction of the build image (and creation of a generalized build image for go, rust, python, and just an ordinary buildah one)
-  * [] There's still some internal dialog into whether or not I want to do environment installs inside the container (slow and probably buggy) or only support the images.
-  * [] This also links into how we expose build commands (as builder.yaml files in the repo).  We could potentially add "custom" build commands and "packages".
-  * [] Thinking about this more, we should probably not rely on builder.yaml files inside the repo, this would tightly couple the images to these.  Instead we could add some simple generic fields/etc to expose.  Then if the user wants to make things a bit more intricate by including a build file there, they can. I'd love to just be able to define a standard go image and build.
+# Notes
 
-* [] For each resource that is being created, copy in existing annotations, labels, and containers to account for environments that are injecting information or sidecars into their deployed applications.
+# Worker
+* Just a note that the sock location must be homogeneous across all nodes.
+* Lock down the pod through RBAC policies, use a scratch image with no extra items.
+Note: You can copy over /etc/ssl into the scratch image and it should work.  So use a build stage to add certs to a debian/ubuntu image, then copy.
+* The node/kubelet will automatically clean up images: https://kubernetes.io/docs/concepts/architecture/garbage-collection/#container-image-garbage-collection.  Recommended to disable this, however this has the side effect of running the node out of memory so we'll want to watch this carefully in the sync service and use the high/low watermarks to make our own determination about how we clean up images, or just initially refuse to add if we hit the high watermark (used/unused/age/etc).  We could make this configurable and do a best effort attempt to remove image labels on the nodes if cleanup happens.
 
+# TODAY
+* First pass at the readme and commit.
+* Add the watches and mutators for Deployments, Statefulsets, Pods, Jobs, etc for selectors and pull policy.
+  * These are going to need to know how to create the selectors from the label hashes so move that
+  functionality out to util.
 
+# BUG
+* After a image deletion and re-apply, the monitor didn't start back up again.
+* Finalizer doesn't appear to be requeuing itself, or if it is it's not running the finalizer again to remove.
+
+# LATER
+* Add image gc to the workers (probably fits in the deletion process).
+* See if we can speed up image loads through local registries or shared image mounts. AWS uses a snapshotted volume that it mounts into the node so all the images are available on startup.  But I think we can still speed it up if we are hosting a local registry (may need to have an HPA attached to it to guard against scale)
+* Local registry process that has a worker and a puller that pulls from external to internal registries. If the image references the local registry, the mutator will ensure that all of the container images are updated to point to the internal.
+* Access to registries should include some ability to authenticate.
+* Identify and add group/org to the path of containers.
+* Monitor also adds a 'images' section to status with detailed state info for each tag
+* Fetch workers should be able to set a state of error so we don't retry ones that have failed.  Use exponential backoff on that with a max time of 10 minutes - if an image has failed with 'failed to pull image' at least <configurable> times, set the label to error.
+
+# CLEAN
+* Consolidate all of the node selection helpers
+* Consolidate hashing utility

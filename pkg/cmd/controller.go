@@ -14,14 +14,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	v1 "stvz.io/coral/pkg/apis/stvz.io/v1"
 	"stvz.io/coral/pkg/controller"
+	"stvz.io/coral/pkg/monitor"
 )
 
 const (
-	DefaultCertDir              string = "/etc/webhook/tls"
-	DefaultEnableLeaderElection bool   = false
-	DefaultSkipInsecureVerify   bool   = false
-	DefaultLogLevel             int8   = 0
-
 	ControllerUsage     = "controller [ARG...]"
 	ControllerShortDesc = "Start the build controller"
 	ControllerLongDesc  = `Starts the build controller providing management of the
@@ -79,24 +75,24 @@ func (c *Controller) RunE(cmd *cobra.Command, args []string) error {
 		os.Exit(1)
 	}
 
-	if err = (&v1.BuildSet{}).SetupWebhookWithManager(mgr); err != nil {
-		log.Error(err, "unable to create webhook", "webhook", "BuildSet")
+	mtr := monitor.NewManager(mgr.GetClient(), mgr.GetCache(), log)
+
+	if err = (&v1.Image{}).SetupWebhookWithManager(mgr); err != nil {
+		log.Error(err, "unable to create webhook", "webhook", "Image")
 		os.Exit(1)
 	}
 
-	if err = (&v1.WatchSet{}).SetupWebhookWithManager(mgr); err != nil {
-		log.Error(err, "unable to create webhook", "webhook", "WatchSet")
-		os.Exit(1)
-	}
-
-	if err = controller.SetupWithManager(mgr); err != nil {
-		log.Error(err, "unable to setup controller")
+	if err = controller.SetupWithManager(mgr, mtr); err != nil {
+		log.Error(err, "unable to setup controllers")
 		os.Exit(1)
 	}
 
 	// Start the manager process
 	log.Info("starting manager")
-	return mgr.Start(ctx)
+	err = mgr.Start(ctx)
+	mtr.Stop()
+
+	return err
 }
 
 func (c *Controller) Command() *cobra.Command {

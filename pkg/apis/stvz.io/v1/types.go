@@ -16,284 +16,150 @@ package v1
 // +kubebuilder:docs-gen:collapse=Apache License
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/selection"
 )
 
 // +kubebuilder:docs-gen:collapse=Go imports
 
-// BuildQueueSpec is the spec for a BuildQueue resource. The BuildQueue currently
-// supports NATs in a single server configuration.  Under the hood, we'll use stateful
-// sets to manage pods in the cluster.  This will allow for us to come back through
-// and add in clustering support later.  The build queue will be low throughput for the
-// most part and should not require a lot of resources.
-type BuildQueueSpec struct {
-	// +optional
-	// +nullable
-	// Replicas is the number of cluster nodes to add.  Currently, we only support a
-	// single node as we will not have the ability to cleanly update/restart.  In every
-	// case this will be overridden to 1.
-	Replicas *int32 `json:"replicas"`
-	// +optional
-	// +nullable
-	// Version is the version of the NATs server to run.  This defaults to 2.10.4.
-	Version *string `json:"version"`
-	// +optional
-	// +nullable
-	// Resources is the resource limits and requests for the build queue pod(s).
-	Resources *corev1.ResourceRequirements `json:"resources"`
-	// +optional
-	// +nullable
-	// Volume is the persistent volume claim for the build queue.  If not defined
-	// then the build queue will only use in memory storage which will not persist
-	// across restarts.
-	Volume *corev1.PersistentVolumeClaim `json:"volume,omitempty"`
+type RestartPolicy string
+
+const (
+	// RestartPolicyNever indicates that the resources using an updated image should never be restarted.
+	RestartPolicyNever RestartPolicy = "Never"
+	// RestartPolicyAlways indicates that the resources using an updated image should always be restarted.
+	RestartPolicyAlways RestartPolicy = "Always"
+	// RestartPolicyAnnotation indicates that the resources using an updated image should be restarted if the annotation is present.
+	RestartPolicyAnnotation RestartPolicy = "Annotation"
+)
+
+type NodeSelector struct {
+	Key      string             `json:"key"`
+	Operator selection.Operator `json:"operator"`
+	Values   []string           `json:"values"`
 }
 
-type BuildQueueStatus struct {
+type ImageSpecRegistry struct {
+	// +required
+	// URL is the URL of the registry to mirror the image to.  The registry must be accessible from
+	// the daemonsets that run on the nodes, and must also support the docker registry API V2.
+	URL *string `json:"url"`
+}
+
+type ImageSpecImages struct {
+	// +required
+	// ImageName is the name of the image to mirror.
+	Name *string `json:"name"`
+	// +required
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=100
+	// Tags are the tags of the image to mirror.
+	Tags []string `json:"tags"`
 	// +optional
-	// ReadyReplicas is the number of ready replicas.
-	ReadyReplicas *int `json:"readyReplicas"`
+	// pullSecrets is a list of secrets to use when pulling the image.
+	// pullSecrets []corev1.LocalObjectReference `json:"pullSecrets"`
+}
+
+// ImageSpec is the spec for a Image resource.
+type ImageSpec struct {
 	// +optional
-	// Replicas is the total number of replicas.
-	Replicas *int `json:"replicas"`
+	// Enabled indicates whether the image synchronization is enabled.  This defaults to true.
+	Enabled *bool `json:"enabled"`
 	// +optional
-	// UpdatedReplicas is the number of replicas that have been updated.
-	UpdatedReplicas *int `json:"updatedReplicas"`
+	// ManagePullPolicies will adjust all resources that use the image to never pull the image.  This defaults to true.
+	ManagePullPolicies *bool `json:"managePullPolicies"`
+	// +optional
+	// +nullable
+	// Selector defines which nodes the image should be synced to.
+	Selector []NodeSelector `json:"selector"`
+	// +optional
+	// PollInterval is the interval to poll the registry for new images.  This defaults to 5 minutes with a 1 minute splay.
+	PollInterval *metav1.Duration `json:"pollInterval"`
+	// +optional
+	// +nullable
+	// Registry provides details of an internal registry that will recieve the container images. If
+	// an internal registry is set then the images will only be mirrored to the internal registry.
+	// if the internal registry is set, the sync workers on the nodes will not pull the images from
+	// external registries, but will only pull from the internal registry.
+	Registry *ImageSpecRegistry `json:"registry"`
+	// +optional
+	// RestartPolicy is the policy to use when the image is updated.  I'm not sure that I want this though.  This defaults to Never.
+	// RestartPolicy *RestartPolicy `json:"restartPolicy"`
+	// +required
+	Images []ImageSpecImages `json:"images"`
 }
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +k8s:defaulter-gen=true
+// +kubebuilder:validation:Required
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Namespaced,shortName=bq,singular=buildqueue
-// +kubebuilder:printcolumn:name="Ready",type="integer",JSONPath=".status.readyReplicas",description="The number of ready replicas"
-// +kubebuilder:printcolumn:name="Replicas",type="integer",JSONPath=".status.replicas",description="The number of replicas"
+// +kubebuilder:resource:scope=Namespaced,shortName=img,singular=images
+// +kubebuilder:printcolumn:name="Total",type="integer",JSONPath=".status.totalNodes",description="The number of nodes that should have the image prefetched"
+// +kubebuilder:printcolumn:name="Available",type="integer",JSONPath=".status.availableNodes",description="The number of nodes that have successfully fetched all tags"
+// +kubebuilder:printcolumn:name="Pending",type="integer",JSONPath=".status.pendingNodes",description="The number of nodes that are pending fetchs of 1 or more tags"
+// +kubebuilder:printcolumn:name="Deleting",type="integer",JSONPath=".status.deletingNodes",description="The number of nodes where images are waiting to be removed"
+// +kubebuilder:printcolumn:name="Unknown",type="integer",JSONPath=".status.unknownNodes",description="The number of nodes where the images are in an unknown state"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
-// BuildQueue is the message queue for repo changes and builds
-type BuildQueue struct {
+// Image is an external image that will be mirrored to each configured node.
+type Image struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              BuildQueueSpec `json:"spec"`
+	Spec              ImageSpec `json:"spec"`
 	// +optional
-	Status BuildQueueStatus `json:"status"`
+	Status ImageStatus `json:"status"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type BuildQueueList struct {
+type ImageList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []BuildQueue `json:"items"`
+	Items           []Image `json:"items"`
 }
 
-// On is the watch configuration for a git repository.
-type On struct {
-	// +optional
-	// Branches are the branches to watch.
-	Branches []string `json:"branches"`
-	// +optional
-	// MaxAge is the maximum age of a commit to consider.  This defaults to 1h.
-	MaxAge *metav1.Duration `json:"maxAge"`
-	// +optional
-	// PollIntervalSeconds is the number of seconds to wait between polling the
-	// repository events for changes.  This defaults to 10 seconds.
-	PollIntervalSeconds *int `json:"pollIntervalSeconds"`
-	// +optional
-	// Tags contain the patterns to match for tags.
-	Tags []string `json:"tags"`
-	// +optional
-	// Releases is the wildcard patterns to match for release events.
-	Releases []string `json:"releases"`
+type ImageState string
+
+const (
+	ImageStatePending   ImageState = "pending"
+	ImageStateAvailable ImageState = "available"
+	ImageStateDeleting  ImageState = "deleting"
+	ImageStateUnknown   ImageState = "unknown"
+)
+
+func (i ImageState) String() string {
+	return string(i)
 }
 
-// Watch is the watch configuration for a git repository.  In the future, we'll
-// support other types of repositories, but for now, we're just going to support
-// github.
-type Watch struct {
-	// +optional
-	// +nullable
-	// DryRun is a flag that indicates whether or not to actually run the build.
-	// If set to true, then a change event will be logged, but the build will not
-	// be kicked off.
-	DryRun *bool `json:"dryRun"`
-	// +optional
-	// +nullable
-	// Enabled indicates the watch should poll.
-	Enabled *bool `json:"enabled"`
-	// +required
-	// Owner is the owner (user or organization) of the repository.
-	Owner *string `json:"owner"`
-	// +required
-	// Repo is the name of the repository.
-	Repo *string `json:"repo"`
-	// +optional
-	// +nullable
-	On *On `json:"on"`
-}
-
-// WatchSetSpec is the spec for a WatchSet resource.
-type WatchSetSpec struct {
-	// +optional
-	// +nullable
-	// Enabled globally enables or disables the builder respositories.  This
-	// defaults to true.
-	Enabled *bool `json:"enabled"`
-	// +optional
-	// +nullable
-	// Secret is the name of the secret resource that contains the credentials
-	// for accessing a git repository.  In the future, I'll pull this into vendor
-	// specific secrets.
-	SecretName *string `json:"secretName"`
-	// +optional
-	// +nullable
-	// Replicas is the number of replicas to run for the watch.
-	Replicas *int32 `json:"replicas"`
-	// +optional
-	// +nullable
-	// Image is the image to use for the watch.  Under normal circumstances, this
-	// will be the same image that is generated from this service.  This does allow
-	// for the possibility of a custom watch image to be used and will be used during
-	// local development.
-	Image *string `json:"image"`
-	// +optional
-	// +nullable
-	// Command is the command to run for the watch.  Like images, this will not be
-	// used in normal circumstances, but does allow for local development and custom
-	// images.
-	Command *string `json:"command"`
-	// +optional
-	// +nullable
-	// Version is the version of the coral watcher to run.  This defaults to latest.
-	Version *string `json:"version"`
-	// +optional
-	// +nullable
-	// Resources is the resource limits and requests for the build queue pod(s).
-	Resources *corev1.ResourceRequirements `json:"resources"`
-	// +required
-	// BuildQueueRef is the reference to the build queue that will be used
-	// to stage build events for processing.
-	BuildQueueRef *corev1.ObjectReference `json:"buildQueueRef"`
-	// +required
-	// Watches is a list of repositories to watch.
-	Watches []Watch `json:"watches"`
+func ImageStateFromString(i string) ImageState {
+	switch i {
+	case "available":
+		return ImageStateAvailable
+	case "pending":
+		return ImageStatePending
+	case "deleting":
+		return ImageStateDeleting
+	default:
+		return ImageStateUnknown
+	}
 }
 
 // WatchStatus is the status for a WatchSet resource.
-type WatchSetStatus struct {
+type ImageStatus struct {
 	// +optional
-	// Enabled indicates whether the watch is polling.
-	Enabled *bool `json:"enabled"`
+	// TotalNodes is the number of nodes that should have the image prefetched.
+	TotalNodes int `json:"totalNodes"`
 	// +optional
-	// ReadyReplicas is the number of ready replicas.
-	ReadyReplicas *int `json:"readyReplicas"`
+	// AvailableNodes is the number of nodes that have successfully fetched all images.
+	AvailableNodes int `json:"availableNodes"`
 	// +optional
-	// Replicas is the total number of replicas.
-	Replicas *int `json:"replicas"`
+	// PendingNodes is the number of nodes that are pending at least one image fetch.
+	PendingNodes int `json:"pendingNodes"`
 	// +optional
-	// UpdatedReplicas is the number of replicas that have been updated.
-	UpdatedReplicas *int `json:"updatedReplicas"`
-}
-
-// +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:defaulter-gen=true
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Namespaced,shortName=ws,singular=watchset
-// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-
-// WatchSet is a set of watches associated with the repository.
-type WatchSet struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              WatchSetSpec `json:"spec"`
+	// DeletingNodes is the number of nodes that are waiting for at least one image to be removed.
+	DeletingNodes int `json:"deletingNodes"`
 	// +optional
-	Status WatchSetStatus `json:"status"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-type WatchSetList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []WatchSet `json:"items"`
-}
-
-// BuildSetSpec is the spec for a BuildSet resource.
-type BuildSetSpec struct {
-	// +optional
-	// +nullable
-	// Enabled globally enables or disables the builder respositories.  This
-	// defaults to true.
-	Enabled *bool `json:"enabled"`
-	// +optional
-	// +nullable
-	// Replicas is the number of replicas to run for the watch.
-	Replicas *int32 `json:"replicas"`
-	// +optional
-	// +nullable
-	// Image is the image to use for the watch.  Under normal circumstances, this
-	// will be the same image that is generated from this service.  This does allow
-	// for the possibility of a custom watch image to be used and will be used during
-	// local development.
-	Image *string `json:"image"`
-	// +optional
-	// +nullable
-	// Command is the command to run for the watch.  Like images, this will not be
-	// used in normal circumstances, but does allow for local development and custom
-	// images.
-	Command *string `json:"command"`
-	// +optional
-	// +nullable
-	// Version is the version of the coral watcher to run.  This defaults to latest.
-	Version *string `json:"version"`
-	// +required
-	// BuildQueueRef is the reference to the build queue that will be used
-	// to stage build events for processing.
-	BuildQueueRef *corev1.ObjectReference `json:"buildQueueRef"`
-	// +optional
-	// +nullable
-	// Resources is the resource limits and requests for the build queue pod(s).
-	Resources *corev1.ResourceRequirements `json:"resources"`
-}
-
-// BuildSetStatus is the status for a WatchSet resource.
-type BuildSetStatus struct {
-	// +optional
-	// Enabled indicates whether the watch is polling.
-	Enabled *bool `json:"enabled"`
-	// +optional
-	// ReadyReplicas is the number of ready replicas.
-	ReadyReplicas *int `json:"readyReplicas"`
-	// +optional
-	// Replicas is the total number of replicas.
-	Replicas *int `json:"replicas"`
-	// +optional
-	// UpdatedReplicas is the number of replicas that have been updated.
-	UpdatedReplicas *int `json:"updatedReplicas"`
-}
-
-// +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +k8s:defaulter-gen=true
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Namespaced,shortName=bs,singular=buildset
-// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-
-// BuildSet is a set of pods that build images based on recieved events.
-type BuildSet struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              BuildSetSpec `json:"spec"`
-	// +optional
-	Status BuildSetStatus `json:"status"`
-}
-
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-
-type BuildSetList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []BuildSet `json:"items"`
+	// UnknownNodes is the number of nodes that are in an unknown state.
+	UnknownNodes int `json:"unknownNodes"`
 }

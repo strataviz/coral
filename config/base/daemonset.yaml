@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: coral-worker
+  namespace: coral
+  labels:
+    app: coral-worker
+spec:
+  selector:
+    matchLabels:
+      app: coral-worker
+  template:
+    metadata:
+      labels:
+        app: coral-worker
+    spec:
+      serviceAccountName: coral
+      containers:
+      - name: worker
+        image: docker.io/strataviz/coral:latest
+        command:
+        - /coral
+        - worker
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: CORAL_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          runAsNonRoot: false
+        # Need to get priorityClass in here as well.
+        ports:
+        - containerPort: 9090
+        volumeMounts:
+        - name: varrun
+          mountPath: "/kubelet"
+      volumes:
+      - name: varrun
+        hostPath:
+          path: /var/run

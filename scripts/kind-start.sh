@@ -3,12 +3,12 @@ set -o errexit
 
 NODE_IMAGE="kindest/node:v1.28.0"
 
-CLUSTER="$(kind get clusters 2>&1 | grep strataviz || : )"
+CLUSTER="$(kind get clusters 2>&1 | grep coral || : )"
 # Only start the cluster if it doesn't exist.  I'm starting to reuse clusters so it
 # may be worthwhle to pull out my sandboxing infra to something that can be reused
 # across projects.
 if [ "x$CLUSTER" == "x" ] ; then
-cat <<EOF | kind create cluster --name=strataviz --config=-
+cat <<EOF | kind create cluster --name=coral --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:

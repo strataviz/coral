@@ -31,7 +31,12 @@ spec:
             - name: tls
               mountPath: "/etc/webhook/tls"
               readOnly: true
+            - name: varrun
+              mountPath: "/kubelet"
       volumes:
         - name: tls
           secret:
             secretName: coral-webhook-cert
+        - name: varrun
+          hostPath:
+            path: /var/run
