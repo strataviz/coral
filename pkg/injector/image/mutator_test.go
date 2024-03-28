@@ -541,6 +541,37 @@ var _ = Describe("Image functions:", func() {
 			Expect(got.NodeSelector).To(HaveKeyWithValue("image.stvz.io/e28d47094db7c64507211886dcba74c9", "available"))
 			Expect(got.NodeSelector).To(HaveKeyWithValue("image.stvz.io/52eacfd06bb1d06c9b440400a88c6fac", "available"))
 		})
+
+		It("it should not contain previous selectors when the image has been updated", func() {
+			mutator := &Mutator{}
+
+			spec := corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:  "bullseye",
+						Image: "docker.io/library/debian:bullseye-slim",
+					},
+				},
+				NodeSelector: map[string]string{
+					"kubernetes.io/arch": "arm64",
+				},
+			}
+			got := mutator.manageSelectors(spec)
+			Expect(got.NodeSelector).To(HaveKeyWithValue("kubernetes.io/arch", "arm64"))
+			//Expect(got.NodeSelector).To(HaveKeyWithValue("image.stvz.io/e28d47094db7c64507211886dcba74c9", "available"))
+			Expect(got.NodeSelector).To(HaveKeyWithValue("image.stvz.io/52eacfd06bb1d06c9b440400a88c6fac", "available"))
+
+			spec.Containers[0].Image = "docker.io/library/debian:bookworm-slim"
+			spec.NodeSelector = map[string]string{
+				"kubernetes.io/arch":                             "arm64",
+				"image.stvz.io/52eacfd06bb1d06c9b440400a88c6fac": "available",
+			}
+
+			got = mutator.manageSelectors(spec)
+			Expect(got.NodeSelector).To(HaveKeyWithValue("kubernetes.io/arch", "arm64"))
+			Expect(got.NodeSelector).To(HaveKeyWithValue("image.stvz.io/e28d47094db7c64507211886dcba74c9", "available"))
+			Expect(got.NodeSelector).NotTo(HaveKeyWithValue("image.stvz.io/52eacfd06bb1d06c9b440400a88c6fac", "available"))
+		})
 	})
 
 	Context("managePullPolicy", func() {
@@ -649,7 +680,3 @@ var _ = Describe("Image functions:", func() {
 		})
 	})
 })
-
-// TODO: Make sure that I'm cleaning up old node selectors...
-// i.e. I need to filter out the old image.stvz.io selectors.
-// TODO: Change the individual selectors and policy container lists to: include, exclude.

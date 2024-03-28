@@ -2,6 +2,7 @@ package image
 
 import (
 	"encoding/json"
+	"maps"
 	"net/http"
 	"strings"
 
@@ -159,23 +160,26 @@ func (m *Mutator) manage(spec corev1.PodSpec) corev1.PodSpec {
 }
 
 func (m *Mutator) manageImagePullPolicy(spec corev1.PodSpec) corev1.PodSpec {
-	var containerMap map[string]bool
-
-	// see if we can pull out the include/exclude.
+	var containers []corev1.Container
 	if len(m.include) > 0 {
-		containerMap = util.ContainerNamesMapInclude(spec.Containers, m.include)
+		containers = util.AppendFunc(spec.Containers, m.include, func(c corev1.Container, n string) corev1.Container {
+			if c.Name == n {
+				c.ImagePullPolicy = corev1.PullNever
+			}
+			return c
+		})
 	} else if len(m.exclude) > 0 {
-		containerMap = util.ContainerNamesMapExclude(spec.Containers, m.exclude)
+		containers = util.AppendFunc(spec.Containers, m.exclude, func(c corev1.Container, n string) corev1.Container {
+			if c.Name != n {
+				c.ImagePullPolicy = corev1.PullNever
+			}
+			return c
+		})
 	} else {
-		containerMap = util.ContainerNamesMap(spec.Containers)
-	}
-
-	containers := []corev1.Container{}
-	for _, container := range spec.Containers {
-		if containerMap[container.Name] {
-			container.ImagePullPolicy = corev1.PullNever
+		for _, c := range spec.Containers {
+			c.ImagePullPolicy = corev1.PullNever
+			containers = append(containers, c)
 		}
-		containers = append(containers, container)
 	}
 
 	spec.Containers = containers
@@ -184,25 +188,34 @@ func (m *Mutator) manageImagePullPolicy(spec corev1.PodSpec) corev1.PodSpec {
 }
 
 func (m *Mutator) manageSelectors(spec corev1.PodSpec) corev1.PodSpec {
-	containers := spec.Containers
-
 	selectors := spec.NodeSelector
 	if selectors == nil {
 		selectors = make(map[string]string)
 	}
 
-	// see if we can pull out the include/exclude.
-	var images []string
+	// Ensure we are removing any existing selectors.  There may be a quicker
+	// way to do this, but the I don't expect the number of selectors to be
+	// large.
+	maps.DeleteFunc(selectors, func(k string, v string) bool {
+		return strings.HasPrefix(k, util.LabelPrefix)
+	})
+
+	var containers []corev1.Container
+	// Include will always take precedence over exclude.
 	if len(m.include) > 0 {
-		images = util.ContainerImageInclude(containers, m.include)
+		containers = util.FilterFunc(spec.Containers, m.include, func(c corev1.Container, n string) bool {
+			return c.Name == n
+		})
 	} else if len(m.exclude) > 0 {
-		images = util.ContainerImageExclude(containers, m.exclude)
+		containers = util.FilterFunc(spec.Containers, m.exclude, func(c corev1.Container, n string) bool {
+			return c.Name != n
+		})
 	} else {
-		images = util.ContainerImages(containers)
+		containers = spec.Containers
 	}
 
-	for _, image := range images {
-		selectors[util.ImageLabelKey(util.ImageHasher(image))] = "available"
+	for _, c := range containers {
+		selectors[util.ImageLabelKey(util.ImageHasher(c.Image))] = "available"
 	}
 
 	spec.NodeSelector = selectors
