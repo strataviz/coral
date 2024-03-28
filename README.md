@@ -25,7 +25,78 @@ TODO
 
 TODO
 
-### Node selector mutations
+### Inject pull policies and selectors
+
+Coral gives the option of modifying the pull policies and node selectors of any managed resource.  This allows the user to restrict pods to nodes that already have the image present and also ensure that the pod does not try and pull images externally.  You can control this through annotations on the resource.
+
+The default injection policy is to not modify any resources.  However, the webhook is set up by default to handle and check all resources in all namespaces other than ones that match `kube-*`, `*-system`, `coral`, and `cert-manager`.  Access is configurable through the webhook configuration.  There are several examples listed in [docs/injection-webhook-config.md](the injection webook configuration) document.
+
+#### Pull policy
+
+Coral can ensure that the pull policy for all containers in the resource are set to `never` thereby restricting resources to images already present on the nodes.  To have coral override pull policies for a resource, add the following annotation:
+
+```
+image.stvz.io/inject: pull-policy
+```
+
+You can exclude containers from the injection policies by using the following annotation with a comma seperated list of container names:
+
+```
+image.stvz.io/exclude: [container-name],...
+```
+
+The alternative to exclude is the include annotation which will only include containers listed for policy injection:
+
+```
+image.stvz.io/include: [container-name],...
+```
+
+If both the `include` and `exclude` annotations are present, `exclude` will be ignored.
+
+#### Node selection
+
+Node selection can be used to ensure that pods are started up on nodes that already have the image fetched.  Coral fetch workers will label the nodes once a managed image is present on the node allowing us to gate scheduling on that node to ensure there are no disruptions and to minimize startup latency.  To enable the injection of node selectors into your resources, enable the following:
+
+```
+image.stvz.io/inject: selectors
+```
+
+By default, all container images are included as part of the selector. As with the policy injection, containers can be included and excluded from:
+
+```
+image.stvz.io/include: [container-name],...
+```
+
+and 
+
+```
+image.stvz.io/exclude: [container-name],...
+```
+
+#### Multiple injectors
+
+Multiple injection rules can be specified by including a comma seperated list for the annotation value:
+
+```
+image.stvz.io/inject: pull-policy,selectors
+```
+
+#### Resources that are supported for injection
+
+##### Core (v1)
+* Pods
+* ReplicationController
+
+##### Apps (v1)
+* DaemonSets
+* Deployments
+* ReplicaSets
+* ReplicationController
+* StatefulSets
+
+##### Batch (v1)
+* CronJobs
+* Jobs
 
 TODO
 

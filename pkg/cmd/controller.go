@@ -12,8 +12,9 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-	v1 "stvz.io/coral/pkg/apis/stvz.io/v1"
+	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
 	"stvz.io/coral/pkg/controller"
+	"stvz.io/coral/pkg/injector"
 	"stvz.io/coral/pkg/monitor"
 )
 
@@ -42,7 +43,7 @@ func NewController() *Controller {
 }
 
 func (c *Controller) RunE(cmd *cobra.Command, args []string) error {
-	_ = v1.AddToScheme(c.scheme)
+	_ = stvziov1.AddToScheme(c.scheme)
 	_ = corev1.AddToScheme(c.scheme)
 	_ = appsv1.AddToScheme(c.scheme)
 
@@ -77,8 +78,13 @@ func (c *Controller) RunE(cmd *cobra.Command, args []string) error {
 
 	mtr := monitor.NewManager(mgr.GetClient(), mgr.GetCache(), log)
 
-	if err = (&v1.Image{}).SetupWebhookWithManager(mgr); err != nil {
+	if err = (&stvziov1.Image{}).SetupWebhookWithManager(mgr); err != nil {
 		log.Error(err, "unable to create webhook", "webhook", "Image")
+		os.Exit(1)
+	}
+
+	if err = injector.SetupWebhookWithManager(mgr); err != nil {
+		log.Error(err, "unable to create webhook", "webhook", "Pod")
 		os.Exit(1)
 	}
 

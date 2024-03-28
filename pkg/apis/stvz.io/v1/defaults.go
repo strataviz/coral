@@ -46,11 +46,6 @@ func defaultedImage(obj *Image) {
 		obj.Spec.Enabled = new(bool)
 		*obj.Spec.Enabled = true
 	}
-
-	if obj.Spec.ManagePullPolicies == nil {
-		obj.Spec.ManagePullPolicies = new(bool)
-		*obj.Spec.ManagePullPolicies = DefaultManagePullPolicies
-	}
 }
 
 // Defaulted sets the resource defaults.

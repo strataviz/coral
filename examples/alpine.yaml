@@ -5,7 +5,6 @@ metadata:
 spec:
   enabled: true
   pollInterval: 30s
-  #managePullPolicy: true
   images:
     - name: docker.io/library/alpine
       tags:

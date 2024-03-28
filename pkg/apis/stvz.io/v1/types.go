@@ -66,22 +66,12 @@ type ImageSpec struct {
 	// Enabled indicates whether the image synchronization is enabled.  This defaults to true.
 	Enabled *bool `json:"enabled"`
 	// +optional
-	// ManagePullPolicies will adjust all resources that use the image to never pull the image.  This defaults to true.
-	ManagePullPolicies *bool `json:"managePullPolicies"`
-	// +optional
 	// +nullable
 	// Selector defines which nodes the image should be synced to.
 	Selector []NodeSelector `json:"selector"`
 	// +optional
 	// PollInterval is the interval to poll the registry for new images.  This defaults to 5 minutes with a 1 minute splay.
 	PollInterval *metav1.Duration `json:"pollInterval"`
-	// +optional
-	// +nullable
-	// Registry provides details of an internal registry that will recieve the container images. If
-	// an internal registry is set then the images will only be mirrored to the internal registry.
-	// if the internal registry is set, the sync workers on the nodes will not pull the images from
-	// external registries, but will only pull from the internal registry.
-	Registry *ImageSpecRegistry `json:"registry"`
 	// +optional
 	// RestartPolicy is the policy to use when the image is updated.  I'm not sure that I want this though.  This defaults to Never.
 	// RestartPolicy *RestartPolicy `json:"restartPolicy"`

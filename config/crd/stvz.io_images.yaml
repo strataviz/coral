@@ -70,18 +70,8 @@ spec:
                   - tags
                   type: object
                 type: array
-              managePullPolicies:
-                type: boolean
               pollInterval:
                 type: string
-              registry:
-                nullable: true
-                properties:
-                  url:
-                    type: string
-                required:
-                - url
-                type: object
               selector:
                 items:
                   properties:

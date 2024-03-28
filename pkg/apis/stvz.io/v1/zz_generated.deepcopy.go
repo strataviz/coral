@@ -90,11 +90,6 @@ func (in *ImageSpec) DeepCopyInto(out *ImageSpec) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.ManagePullPolicies != nil {
-		in, out := &in.ManagePullPolicies, &out.ManagePullPolicies
-		*out = new(bool)
-		**out = **in
-	}
 	if in.Selector != nil {
 		in, out := &in.Selector, &out.Selector
 		*out = make([]NodeSelector, len(*in))
@@ -106,11 +101,6 @@ func (in *ImageSpec) DeepCopyInto(out *ImageSpec) {
 		in, out := &in.PollInterval, &out.PollInterval
 		*out = new(metav1.Duration)
 		**out = **in
-	}
-	if in.Registry != nil {
-		in, out := &in.Registry, &out.Registry
-		*out = new(ImageSpecRegistry)
-		(*in).DeepCopyInto(*out)
 	}
 	if in.Images != nil {
 		in, out := &in.Images, &out.Images
