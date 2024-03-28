@@ -11,6 +11,30 @@ const (
 	LabelPrefix = "image.stvz.io/"
 )
 
+func AppendFunc[S, T any](a []S, b []T, fn func(S, T) S) []S {
+	var result []S
+	for _, item := range a {
+		for _, other := range b {
+			result = append(result, fn(item, other))
+		}
+	}
+
+	return result
+}
+
+func FilterFunc[S, T any](a []S, b []T, fn func(S, T) bool) []S {
+	var result []S
+	for _, i := range a {
+		for _, j := range b {
+			if fn(i, j) {
+				result = append(result, i)
+			}
+		}
+	}
+
+	return result
+}
+
 func ImageLabelKey(hash string) string {
 	return fmt.Sprintf("%s%s", LabelPrefix, hash)
 }

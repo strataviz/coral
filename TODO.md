@@ -6,15 +6,23 @@
 Note: You can copy over /etc/ssl into the scratch image and it should work.  So use a build stage to add certs to a debian/ubuntu image, then copy.
 
 # TODAY
-* Add in secrets.  AuthConfig is in the PullImageRequest struct.
+* Filter out old image selectors.  Right now, if the image changes, the old ones are left in.
+* Add in secrets.  AuthConfig is in the PullImageRequest struct. 
 * Additional work on the readme.
-* If there's time left, put together the mirroring.  Right now I have it in the Image, but I think I don't actually want that.  Create a new type called RegistryMirror.  I think that we actually create a more wholistic process here where we have a producer that pushes into a queue then a set of consumers that mirror images
+* Determine whether or not I'm keeping this in strataviz.
+
+# MVP
+* Create a new type called RegistryMirror.  I think that we actually create a more wholistic process here where we have a producer that pushes into a queue then a set of consumers that mirror images.  There will be a new injection rule that will transform images to use the local repository only.  That way they can keep the pull, but still restrict external pulling (and it's quicker).  Initially it requires a local registry to be available
+* Container builds and uploads.
+* Fix all known bugs.
+* Move the rest of the TODO items into github issues.
+* Finish and polish the README and other docs.
 
 # BRAINSTORM
 * Only have a single list for containers?  Is there any case where I would want to have the selectors different for each filter set?
 
 # BUG
-* After a image deletion and re-apply, the monitor didn't start back up again.
+* After a image deletion and re-apply, the monitor didn't start back up again (I think this is due to not shutting it down in the finalizer).
 * Finalizer doesn't appear to be requeuing itself, or if it is it's not running the finalizer again to remove.
 
 # LATER
@@ -25,6 +33,7 @@ Note: You can copy over /etc/ssl into the scratch image and it should work.  So 
 * Identify and add group/org to the path of containers.
 * Monitor also adds a 'images' section to status with detailed state info for each tag
 * Fetch workers should be able to set a state of error so we don't retry ones that have failed.  Use exponential backoff on that with a max time of 10 minutes - if an image has failed with 'failed to pull image' at least <configurable> times, set the label to error.
+* Set up docs page in netlify.
 
 # CLEAN
 * Consolidate all of the node selection helpers
