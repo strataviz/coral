@@ -11,7 +11,7 @@ const (
 	LabelPrefix = "image.stvz.io/"
 )
 
-func AppendFunc[S, T any](a []S, b []T, fn func(S, T) S) []S {
+func ModifyFunc[S, T any](a []S, b []T, fn func(S, T) S) []S {
 	var result []S
 	for _, item := range a {
 		for _, other := range b {
@@ -35,7 +35,25 @@ func FilterFunc[S, T any](a []S, b []T, fn func(S, T) bool) []S {
 	return result
 }
 
+func FilterMapFunc[S, T comparable](a map[S]T, fn func(S, T) bool) map[S]T {
+	result := make(map[S]T)
+
+	for k, v := range a {
+		if fn(k, v) {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
+// TODO: integrate the hashing into this
 func ImageLabelKey(hash string) string {
+	return fmt.Sprintf("%s%s", LabelPrefix, hash)
+}
+
+func HashedImageLabelKey(name string) string {
+	hash := ImageHasher(name)
 	return fmt.Sprintf("%s%s", LabelPrefix, hash)
 }
 

@@ -2,29 +2,29 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: coral-worker
+  name: coral-agent
   namespace: coral
   labels:
-    app: coral-worker
+    app: coral-agent
 spec:
   selector:
     matchLabels:
-      app: coral-worker
+      app: coral-agent
   template:
     metadata:
       labels:
-        app: coral-worker
+        app: coral-agent
     spec:
       serviceAccountName: coral-system
       containers:
-      - name: worker
+      - name: agent
         image: docker.io/golang:latest
         workingDir: /usr/src/app
         command:
         - go
         - run
         - main.go
-        - worker
+        - agent
         - --log-level=8
         imagePullPolicy: IfNotPresent
         env:

@@ -22,6 +22,7 @@ vendor/
 go.work
 
 bin/
+tmp/
 
 # Test certs
 config/overlays/dev/tls.*

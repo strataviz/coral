@@ -2,26 +2,26 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: coral-worker
+  name: coral-agent
   namespace: coral
   labels:
-    app: coral-worker
+    app: coral-agent
 spec:
   selector:
     matchLabels:
-      app: coral-worker
+      app: coral-agent
   template:
     metadata:
       labels:
-        app: coral-worker
+        app: coral-agent
     spec:
-      serviceAccountName: coral
+      serviceAccountName: coral-system
       containers:
-      - name: worker
+      - name: agent
         image: docker.io/strataviz/coral:latest
         command:
         - /coral
-        - worker
+        - agent
         imagePullPolicy: IfNotPresent
         env:
         - name: CORAL_NODE_NAME
