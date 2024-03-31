@@ -162,14 +162,14 @@ func (m *Mutator) manage(spec corev1.PodSpec) corev1.PodSpec {
 func (m *Mutator) manageImagePullPolicy(spec corev1.PodSpec) corev1.PodSpec {
 	var containers []corev1.Container
 	if len(m.include) > 0 {
-		containers = util.AppendFunc(spec.Containers, m.include, func(c corev1.Container, n string) corev1.Container {
+		containers = util.ModifyFunc(spec.Containers, m.include, func(c corev1.Container, n string) corev1.Container {
 			if c.Name == n {
 				c.ImagePullPolicy = corev1.PullNever
 			}
 			return c
 		})
 	} else if len(m.exclude) > 0 {
-		containers = util.AppendFunc(spec.Containers, m.exclude, func(c corev1.Container, n string) corev1.Container {
+		containers = util.ModifyFunc(spec.Containers, m.exclude, func(c corev1.Container, n string) corev1.Container {
 			if c.Name != n {
 				c.ImagePullPolicy = corev1.PullNever
 			}

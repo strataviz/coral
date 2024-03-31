@@ -7,8 +7,7 @@ const (
 	DefaultEnableLeaderElection bool          = false
 	DefaultSkipInsecureVerify   bool          = false
 	DefaultLogLevel             int8          = 0
-	DefaultPullInterval         time.Duration = 10 * time.Second
-	DefaultCleanInterval        time.Duration = 5 * time.Second
+	DefaultPollInterval         time.Duration = 10 * time.Second
 	DefaultContainerdAddr       string        = "unix:///kubelet/containerd/containerd.sock"
 	DefaultNamespace            string        = ""
 )

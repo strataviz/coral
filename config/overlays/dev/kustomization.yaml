@@ -16,5 +16,5 @@ patches:
   - path: daemonset.yaml
     target:
       kind: DaemonSet
-      name: coral-worker
+      name: coral-agent
       namespace: coral

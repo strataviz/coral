@@ -1,6 +1,8 @@
 package v1
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func (i *ImageSpecImages) GetFullTaggedName(tag string) string {
 	return fmt.Sprintf("%s:%s", *i.Name, tag)

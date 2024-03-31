@@ -119,22 +119,22 @@ run:
 	$(eval POD := $(shell kubectl get pods -n coral -l app=coral -o=custom-columns=:metadata.name --no-headers))
 	@$(KUBECTL) exec -n coral -it pod/$(POD) -- bash -c "go run main.go controller --log-level=8 --skip-insecure-verify"
 
-.PHONY: run-worker
-run-worker:
+.PHONY: agent-run
+agent-run:
 	@$(KUBECTL) apply -k config/overlays/$(ENV)
 
-.PHONY: restart-workers
-restart-worker:
-	@$(KUBECTL) rollout restart daemonset coral-worker -n coral
-	@$(KUBECTL) rollout status daemonset coral-worker -n coral --timeout=120s	
+.PHONY: agent-restart
+agent-restart:
+	@$(KUBECTL) rollout restart daemonset coral-agent -n coral
+	@$(KUBECTL) rollout status daemonset coral-agent -n coral --timeout=120s	
 
-.PHONY: stop-workers
-stop-workers:
-	@$(KUBECTL) delete ds/coral-worker -n coral
+.PHONY: agent-stop
+agent-stop:
+	@$(KUBECTL) delete ds/coral-agent -n coral
 
-.PHONY: worker-logs
-worker-logs:
-	@$(KUBECTL) logs -n coral -l app=coral-worker -c worker -f --ignore-errors
+.PHONY: agent-logs
+agent-logs:
+	@$(KUBECTL) logs -n coral -l app=coral-agent -c agent -f --ignore-errors
 
 .PHONY: exec
 exec:

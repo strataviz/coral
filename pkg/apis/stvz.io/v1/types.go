@@ -16,6 +16,7 @@ package v1
 // +kubebuilder:docs-gen:collapse=Apache License
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/selection"
 )
@@ -77,6 +78,10 @@ type ImageSpec struct {
 	// RestartPolicy *RestartPolicy `json:"restartPolicy"`
 	// +required
 	Images []ImageSpecImages `json:"images"`
+	// +optional
+	// +nullable
+	// ImagePullSecrets is a list of secrets to use when pulling the image.
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets"`
 }
 
 // +genclient

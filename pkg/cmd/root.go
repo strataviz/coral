@@ -42,6 +42,6 @@ func (r *Root) Command() *cobra.Command {
 
 	rootCmd.PersistentFlags().StringP("kubeconfig", "", "", "path to kubeconfig file")
 	rootCmd.AddCommand(NewController().Command())
-	rootCmd.AddCommand(NewWorker().Command())
+	rootCmd.AddCommand(NewAgent().Command())
 	return rootCmd
 }

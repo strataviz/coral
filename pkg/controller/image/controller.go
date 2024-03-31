@@ -38,6 +38,7 @@ func SetupWithManager(mgr ctrl.Manager, mtr *monitor.Manager) error {
 // +kubebuilder:rbac:groups=stvz.io,resources=images/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=stvz.io,resources=images/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get
 
 // Reconcile is the main controller loop for the image controller.
 func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
