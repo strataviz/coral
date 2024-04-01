@@ -16,7 +16,17 @@ import (
 
 var _ = Describe("Images", func() {
 
-	Context("Get", func() {
+	Context("ListImages", func() {
+		It("should not return images with deletion timestamps", func() {
+			By("mocking a new client")
+			file := path.Join(fixtures, "images_deleted.yaml")
+			c := mock.NewClient().WithLogger(logger).WithFixtureOrDie(file)
+
+			By("getting the images")
+			images, err := ListImages(ctx, c, "", map[string]string{})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(images).To(HaveLen(0))
+		})
 		It("should return the images across all namespaces matching all nodes", func() {
 			By("mocking a new client")
 			file := path.Join(fixtures, "images.yaml")
