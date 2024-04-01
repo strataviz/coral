@@ -30,6 +30,11 @@ func ListImages(ctx context.Context, c client.Client, ns string, nodeLabels map[
 	}
 
 	for _, image := range imageList.Items {
+		// Skip deleted images.
+		if image.GetDeletionTimestamp() != nil {
+			continue
+		}
+
 		matched, err := matched(image.Spec.Selector, nodeLabels)
 		if err != nil {
 			return nil, err
