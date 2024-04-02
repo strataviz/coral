@@ -50,11 +50,11 @@ func (a *Agent) Start(ctx context.Context) {
 	wg := &sync.WaitGroup{}
 
 	// Start the process workers.
-	eq := NewEventQueue(DefaultEventQueueSize)
+	eq := NewEventQueue()
 	for i := 0; i < a.options.WorkerProcesses; i++ {
 		wg.Add(1)
-		worker := NewProcessWorker(i, a.options)
-		go func(worker *ProcessWorker) {
+		worker := NewWorker(i, a.options)
+		go func(worker *Worker) {
 			defer wg.Done()
 			worker.Start(ctx, eq)
 		}(worker)
@@ -115,10 +115,16 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 			}
 		}
 	}
-	nodeImages := node.ImageHashMap()
+	// nodeImages := node.ImageHashMap()
+	nodeImages, err := ImageHashMap(ctx, a.options.ImageServiceClient)
+	if err != nil {
+		return err
+	}
 	nodeLabels := node.GetLabels()
 
 	state := UpdateStateLabels(nodeLabels, nodeImages, managedImages)
+	labels := ReplaceImageLabels(node.GetLabels(), state)
+	node.UpdateLabels(ctx, a.client, labels)
 
 	for hash, state := range state {
 		name, ok := managedImages[hash]
@@ -167,19 +173,6 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 			a.log.V(10).Info("image is available, skipping", "name", name)
 		}
 	}
-
-	// Refresh the node to make sure we get the latest updates before modifying the
-	// labels.  We want to make sure that we don't overwrite any changes that have been
-	// from other sources.  As for the image labels, we're the only ones that should be
-	// modifying them, so we don't need to worry about that.
-	err = node.Refresh(ctx, a.client)
-	if err != nil {
-		agentError.WithLabelValues("refresh_node").Inc()
-		return err
-	}
-
-	labels := ReplaceImageLabels(node.GetLabels(), state)
-	node.UpdateLabels(ctx, a.client, labels)
 
 	return nil
 }
