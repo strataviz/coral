@@ -19,8 +19,8 @@ type Event struct {
 
 type EventQueue chan *Event
 
-func NewEventQueue(size int) EventQueue {
-	return make(chan *Event, size)
+func NewEventQueue() EventQueue {
+	return make(chan *Event)
 }
 
 func (eq EventQueue) Close() {

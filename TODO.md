@@ -1,20 +1,14 @@
 # Notes
 
 ## CURRENT
-
-* Work on the monitor features.  Move to a worker model instead of per image. Fix the selectors - going back to the per image/tag updates so we can get the correct metrics and status.
-* Figure out a way to block until a pull is available or a delete has successfully processed so we don't try multiple times.
 * Set up dependabot, branch protection, and actions.
-* Additional work on the readme and docs.
 * Dockerfiles.
 * Package manifests.
 
 ## MVP
-* Create a new type called RegistryMirror.  I think that we actually create a more wholistic process here where we have a producer that pushes into a queue then a set of consumers that mirror images.  There will be a new injection rule that will transform images to use the local repository only.  That way they can keep the pull, but still restrict external pulling (and it's quicker).  Initially it requires a local registry to be available.  This may be pushed off depending on time.
+* Create a new type called RegistryMirror.  I think that we actually create a more wholistic process here where we have a producer that pushes into a queue then a set of consumers that mirror images.  There will be a new injection rule that will transform images to use the local repository only.  That way they can keep the pull, but still restrict external pulling (and it's quicker).  Initially it requires a local registry to be available.  This may be pushed off depending on time (maybe push this off).
 * Fix all known bugs.
-* Clean up the processImage method (if time, add some testing around).
 * Move TODO items into github issues.
-* Set up github actions.
 * Finish and polish the README and other docs.
 
 ## BUGS
