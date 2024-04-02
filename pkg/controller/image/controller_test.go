@@ -12,7 +12,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
 	"stvz.io/coral/pkg/mock"
-	"stvz.io/coral/pkg/monitor"
 	"stvz.io/coral/pkg/util"
 )
 
@@ -39,8 +38,7 @@ var _ = Describe("Controller", func() {
 
 			By("creating a new controller")
 			controller := &Controller{
-				Client:  c,
-				Monitor: monitor.NewManager(c, logger),
+				Client: c,
 			}
 
 			By("reconciling the object")
@@ -80,8 +78,7 @@ var _ = Describe("Controller", func() {
 
 			By("creating a new controller")
 			controller := &Controller{
-				Client:  c,
-				Monitor: monitor.NewManager(c, logger),
+				Client: c,
 			}
 
 			By("reconciling the object")
@@ -90,7 +87,6 @@ var _ = Describe("Controller", func() {
 			})
 			Expect(err).ToNot(HaveOccurred())
 			Expect(response.Requeue).To(BeFalse())
-			Expect(controller.Monitor.HasImage(nn)).To(BeTrue())
 		})
 
 		It("should wait for the nodes to clean up it's images before removing the finalizer", func() {
@@ -136,8 +132,7 @@ var _ = Describe("Controller", func() {
 
 			By("creating a new controller")
 			controller := &Controller{
-				Client:  c,
-				Monitor: monitor.NewManager(c, logger),
+				Client: c,
 			}
 
 			By("reconciling the object initially")
@@ -147,7 +142,6 @@ var _ = Describe("Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			// We expect the controller to requeue after 10 seconds from the finalizer add.
 			Expect(response.RequeueAfter).ToNot(BeNil())
-			Expect(controller.Monitor.HasImage(nn)).To(BeTrue())
 
 			By("deleting the image")
 			err = c.Delete(ctx, image)
@@ -160,10 +154,9 @@ var _ = Describe("Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(response.RequeueAfter).ToNot(BeNil())
 
-			By("checking if the object still has the finalizer and monitor while the nodes still are labeled")
+			By("checking if the object still has the finalizer while the nodes still are labeled")
 			err = c.Get(ctx, nn, image)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(controller.Monitor.HasImage(nn)).To(BeTrue())
 			Expect(image.DeletionTimestamp.IsZero()).To(BeFalse())
 			Expect(controllerutil.ContainsFinalizer(image, Finalizer)).To(BeTrue())
 
@@ -179,10 +172,9 @@ var _ = Describe("Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(response.RequeueAfter).ToNot(BeNil())
 
-			By("checking if the object still has the finalizer and monitor while the last node is still labeled")
+			By("checking if the object still has the finalizer while the last node is still labeled")
 			err = c.Get(ctx, nn, image)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(controller.Monitor.HasImage(nn)).To(BeTrue())
 			Expect(controllerutil.ContainsFinalizer(image, Finalizer)).To(BeTrue())
 
 			By("removing the label from the final node")
@@ -197,10 +189,9 @@ var _ = Describe("Controller", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(response.RequeueAfter).ToNot(BeNil())
 
-			By("checking if the object has been deleted and monitor removed")
+			By("checking if the object has been deleted")
 			err = c.Get(ctx, nn, image)
 			Expect(client.IgnoreNotFound(err)).To(BeNil())
-			Expect(controller.Monitor.HasImage(nn)).To(BeFalse())
 		})
 	})
 })

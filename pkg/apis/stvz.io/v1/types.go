@@ -90,11 +90,12 @@ type ImageSpec struct {
 // +kubebuilder:validation:Required
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Namespaced,shortName=img,singular=images
-// +kubebuilder:printcolumn:name="Total",type="integer",JSONPath=".status.totalNodes",description="The number of nodes that should have the image prefetched"
-// +kubebuilder:printcolumn:name="Available",type="integer",JSONPath=".status.availableNodes",description="The number of nodes that have successfully fetched all tags"
-// +kubebuilder:printcolumn:name="Pending",type="integer",JSONPath=".status.pendingNodes",description="The number of nodes that are pending fetchs of 1 or more tags"
-// +kubebuilder:printcolumn:name="Deleting",type="integer",JSONPath=".status.deletingNodes",description="The number of nodes where images are waiting to be removed"
-// +kubebuilder:printcolumn:name="Unknown",type="integer",JSONPath=".status.unknownNodes",description="The number of nodes where the images are in an unknown state"
+// +kubebuilder:printcolumn:name="Images",type="integer",JSONPath=".status.totalImages",description="The number of total images managed by the object"
+// +kubebuilder:printcolumn:name="Available",type="integer",JSONPath=".status.availableImages",description="The number of images that are currently available on the nodes"
+// +kubebuilder:printcolumn:name="Pending",type="integer",JSONPath=".status.pendingImages",description="The number of images that are currently pending on the nodes"
+// +kubebuilder:printcolumn:name="Deleting",type="integer",JSONPath=".status.deletingImages",description="The number of images that are currently pending deletion on the nodes"
+// +kubebuilder:printcolumn:name="Unknown",type="integer",JSONPath=".status.unknownImages",description="The number of images that are in an unknown state on the nodes",priority=1
+// +kubebuilder:printcolumn:name="Nodes",type="integer",JSONPath=".status.totalNodes",description="The number of nodes matching the selector (if any)",priority=1
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // Image is an external image that will be mirrored to each configured node.
@@ -146,15 +147,18 @@ type ImageStatus struct {
 	// TotalNodes is the number of nodes that should have the image prefetched.
 	TotalNodes int `json:"totalNodes"`
 	// +optional
-	// AvailableNodes is the number of nodes that have successfully fetched all images.
-	AvailableNodes int `json:"availableNodes"`
+	// TotalImages is the number of total images managed by the object.
+	TotalImages int `json:"totalImages"`
 	// +optional
-	// PendingNodes is the number of nodes that are pending at least one image fetch.
-	PendingNodes int `json:"pendingNodes"`
+	// AvailableImages is the number of images that are currently available on the nodes.
+	AvailableImages int `json:"availableImages"`
 	// +optional
-	// DeletingNodes is the number of nodes that are waiting for at least one image to be removed.
-	DeletingNodes int `json:"deletingNodes"`
+	// PendingImages is the number of images that are currently pending on the nodes.
+	PendingImages int `json:"pendingImages"`
 	// +optional
-	// UnknownNodes is the number of nodes that are in an unknown state.
-	UnknownNodes int `json:"unknownNodes"`
+	// DeletingImages is the number of images that are currently pending deletion on the nodes.
+	DeletingImages int `json:"deletingImages"`
+	// +optional
+	// UnknownImages is the number of images that are in an unknown state on the nodes.
+	UnknownImages int `json:"unknownImages"`
 }

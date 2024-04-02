@@ -17,25 +17,32 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: The number of nodes that should have the image prefetched
-      jsonPath: .status.totalNodes
-      name: Total
+    - description: The number of total images managed by the object
+      jsonPath: .status.totalImages
+      name: Images
       type: integer
-    - description: The number of nodes that have successfully fetched all tags
-      jsonPath: .status.availableNodes
+    - description: The number of images that are currently available on the nodes
+      jsonPath: .status.availableImages
       name: Available
       type: integer
-    - description: The number of nodes that are pending fetchs of 1 or more tags
-      jsonPath: .status.pendingNodes
+    - description: The number of images that are currently pending on the nodes
+      jsonPath: .status.pendingImages
       name: Pending
       type: integer
-    - description: The number of nodes where images are waiting to be removed
-      jsonPath: .status.deletingNodes
+    - description: The number of images that are currently pending deletion on the
+        nodes
+      jsonPath: .status.deletingImages
       name: Deleting
       type: integer
-    - description: The number of nodes where the images are in an unknown state
-      jsonPath: .status.unknownNodes
+    - description: The number of images that are in an unknown state on the nodes
+      jsonPath: .status.unknownImages
       name: Unknown
+      priority: 1
+      type: integer
+    - description: The number of nodes matching the selector (if any)
+      jsonPath: .status.totalNodes
+      name: Nodes
+      priority: 1
       type: integer
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -102,15 +109,17 @@ spec:
             type: object
           status:
             properties:
-              availableNodes:
+              availableImages:
                 type: integer
-              deletingNodes:
+              deletingImages:
                 type: integer
-              pendingNodes:
+              pendingImages:
+                type: integer
+              totalImages:
                 type: integer
               totalNodes:
                 type: integer
-              unknownNodes:
+              unknownImages:
                 type: integer
             type: object
         required:
