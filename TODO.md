@@ -11,10 +11,12 @@
 * Clean up the processImage method (if time, add some testing around).
 * Remove envtest from the controller in favor of the client mock.
 * Move TODO items into github issues.
+* Set up github actions.
 * Finish and polish the README and other docs.
 
 ## BUG
 * After a image deletion and re-apply, the monitor didn't start back up again (I think this is due to not shutting it down in the finalizer).
+* Monitor not shutting down.
 * Finalizer doesn't appear to be requeuing itself, or if it is it's not running the finalizer again to remove.
 
 ## LATER

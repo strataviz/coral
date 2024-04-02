@@ -3,7 +3,7 @@ kind: Node
 metadata:
   name: node1
 spec:
-  providerID: kind://docker/coral/coral-worker2
+  providerID: kind://docker/coral/node1
 status:
   conditions:
   - status: "False"
@@ -27,7 +27,7 @@ kind: Node
 metadata:
   name: node2
 spec:
-  providerID: kind://docker/coral/coral-worker2
+  providerID: kind://docker/coral/node2
 status:
   conditions:
   - status: "False"
@@ -51,7 +51,7 @@ kind: Node
 metadata:
   name: node3
 spec:
-  providerID: kind://docker/coral/coral-worker2
+  providerID: kind://docker/coral/node3
 status:
   conditions:
   - status: "False"
