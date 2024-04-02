@@ -81,6 +81,7 @@ func (a *Agent) intervalRun(ctx context.Context, eq EventQueue) error {
 	// Get the node labels.
 	node, err := GetNode(ctx, a.options.NodeName, a.client)
 	if err != nil {
+		agentError.WithLabelValues("get_node").Inc()
 		return err
 	}
 
@@ -96,6 +97,7 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 	// Get all the matched images from the cache.
 	images, err := ListImages(ctx, a.client, a.options.Namespace, node.GetLabels())
 	if err != nil {
+		agentError.WithLabelValues("list_images").Inc()
 		return err
 	}
 
@@ -126,9 +128,11 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 			name, ok = nodeImages[hash]
 			if !ok {
 				a.log.Error(nil, "server error, image not found", "hash", hash)
+				agentError.WithLabelValues(name, "image_not_found").Inc()
 				continue
 			}
 			a.log.V(8).Info("sending remove event", "name", name)
+			agentImageRemovals.Inc()
 			eq <- &Event{
 				Operation: Remove,
 				Image:     name,
@@ -139,12 +143,14 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 		auth, ok := authMap[name]
 		if !ok {
 			a.log.Error(nil, "server error, auth not found for image", "name", name)
+			agentError.WithLabelValues(name, "auth_not_found").Inc()
 			continue
 		}
 
 		switch state {
 		case string(stvziov1.ImageStatePending):
 			a.log.V(8).Info("sending pull event", "name", name)
+			agentImagePulls.Inc()
 			eq <- &Event{
 				Operation: Pull,
 				Image:     name,
@@ -152,6 +158,7 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 			}
 		case string(stvziov1.ImageStateDeleting):
 			a.log.V(8).Info("sending remove event", "name", name)
+			agentImageRemovals.Inc()
 			eq <- &Event{
 				Operation: Remove,
 				Image:     name,
@@ -167,6 +174,7 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 	// modifying them, so we don't need to worry about that.
 	err = node.Refresh(ctx, a.client)
 	if err != nil {
+		agentError.WithLabelValues("refresh_node").Inc()
 		return err
 	}
 
