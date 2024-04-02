@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -63,6 +64,10 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 	err := observer.observe(ctx, observed)
 	if err != nil {
 		logger.Error(err, "unable to observe state", "request", req)
+		observerError.With(prometheus.Labels{
+			"name":      req.Name,
+			"namespace": req.Namespace,
+		}).Inc()
 		return ctrl.Result{
 			RequeueAfter: 10 * time.Second,
 		}, err
@@ -84,15 +89,16 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 			controllerutil.AddFinalizer(observed.image, Finalizer)
 			err := c.Client.Update(ctx, observed.image)
 			if err != nil {
-				// TODO: to requue or not?
 				return ctrl.Result{
 					RequeueAfter: 10 * time.Second,
 				}, err
 			}
 		}
 	} else {
-		// The image is being deleted, wait for the nodes to clean up the images
-		// before removing the finalizer.
+		// TODO: I could potentially spawn a new goroutine here to do the cleanup and update
+		// the finalizer in the background.  The controller could then keep track of the time
+		// that it was taking to clean up and potentially alert.  Just need to think through
+		// how it would react if the cleanup failed or the controller was restarted.
 		if controllerutil.ContainsFinalizer(observed.image, Finalizer) {
 			logger.V(8).Info("waiting for nodes to remove the images, shutting down monitor, and removing finalizer", "finalizer", Finalizer)
 			err := c.finish(ctx, observed.image)

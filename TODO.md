@@ -1,25 +1,27 @@
 # Notes
 
 ## CURRENT
-* Create a new type called RegistryMirror.  I think that we actually create a more wholistic process here where we have a producer that pushes into a queue then a set of consumers that mirror images.  There will be a new injection rule that will transform images to use the local repository only.  That way they can keep the pull, but still restrict external pulling (and it's quicker).  Initially it requires a local registry to be available.  This may be pushed off depending on time.
+
+* Work on the monitor features.  Move to a worker model instead of per image. Fix the selectors - going back to the per image/tag updates so we can get the correct metrics and status.
+* Figure out a way to block until a pull is available or a delete has successfully processed so we don't try multiple times.
+* Set up dependabot, branch protection, and actions.
 * Additional work on the readme and docs.
 * Dockerfiles.
 * Package manifests.
 
 ## MVP
+* Create a new type called RegistryMirror.  I think that we actually create a more wholistic process here where we have a producer that pushes into a queue then a set of consumers that mirror images.  There will be a new injection rule that will transform images to use the local repository only.  That way they can keep the pull, but still restrict external pulling (and it's quicker).  Initially it requires a local registry to be available.  This may be pushed off depending on time.
 * Fix all known bugs.
 * Clean up the processImage method (if time, add some testing around).
-* Remove envtest from the controller in favor of the client mock.
 * Move TODO items into github issues.
 * Set up github actions.
 * Finish and polish the README and other docs.
 
-## BUG
-* After a image deletion and re-apply, the monitor didn't start back up again (I think this is due to not shutting it down in the finalizer).
-* Monitor not shutting down.
-* Finalizer doesn't appear to be requeuing itself, or if it is it's not running the finalizer again to remove.
+## BUGS
+* Fix monitor selectors
 
 ## LATER
+* Better monitor with dedicated workers instead of a single process per image.
 * Standardize tests.  The layout has varied as I've gotten used to the new framework.
 * Provide a way for coral to override annotations and force pullpolicies and selectors.  By default, have them disabled so the pre-fetch is more of a convienience feature and if the container doesn't exist on the system it pulls it so no selectors are needed.  However, there may be the case where admins will want to lock image use to those that are already available (or maybe open everything up to only-mirrored) and want to override individual settings.
 * See if we can speed up image loads through local registries or shared image mounts. AWS uses a snapshotted volume that it mounts into the node so all the images are available on startup.  But I think we can still speed it up if we are hosting a local registry (may need to have an HPA attached to it to guard against scale)

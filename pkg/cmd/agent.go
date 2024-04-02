@@ -19,6 +19,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"stvz.io/coral/pkg/agent"
 	v1 "stvz.io/coral/pkg/apis/stvz.io/v1"
 )
@@ -73,6 +74,23 @@ func (a *Agent) RunE(cmd *cobra.Command, args []string) error {
 		log.Error(err, "failed to connect to kube client")
 		os.Exit(1)
 	}
+
+	metrics, err := metricsserver.NewServer(
+		metricsserver.Options{
+			BindAddress: ":8080",
+		},
+		nil, nil,
+	)
+	if err != nil {
+		log.Error(err, "failed to create metrics server")
+		os.Exit(1)
+	}
+
+	// The built-in metrics server doesn't appear to have any mechanism for stopping
+	// gracefully, so we'll just start it and forget about it.  I may come back to this
+	// and strip out the built-in for strata-go, though I'd be missing out on some
+	// good default metrics.
+	go metrics.Start(ctx)
 
 	options := &agent.AgentOptions{
 		Log:                  log,
