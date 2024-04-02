@@ -21,7 +21,7 @@ type Monitor struct {
 	nn     types.NamespacedName
 	log    logr.Logger
 
-	syncOnce sync.Once
+	stopOnce sync.Once
 	stopChan chan struct{}
 }
 
@@ -40,31 +40,27 @@ func (m *Monitor) WithLogger(log logr.Logger) *Monitor {
 }
 
 func (m *Monitor) Start(ctx context.Context) {
-	m.syncOnce.Do(func() {
-		go m.monitor(ctx)
-	})
+	go func() {
+		timer := time.NewTicker(10 * time.Second)
+		defer timer.Stop()
+
+		m.run(ctx)
+		for {
+			select {
+			case <-m.stopChan:
+				m.log.V(4).Info("stopping monitor")
+				return
+			case <-timer.C:
+				m.run(ctx)
+			}
+		}
+	}()
 }
 
 func (m *Monitor) Stop() {
-	m.syncOnce.Do(func() {
+	m.stopOnce.Do(func() {
 		close(m.stopChan)
 	})
-}
-
-func (m *Monitor) monitor(ctx context.Context) {
-	timer := time.NewTicker(10 * time.Second)
-	defer timer.Stop()
-
-	m.run(ctx)
-	for {
-		select {
-		case <-m.stopChan:
-			m.log.V(4).Info("stopping monitor", "image", m.nn)
-			return
-		case <-timer.C:
-			m.run(ctx)
-		}
-	}
 }
 
 func (m *Monitor) run(ctx context.Context) {

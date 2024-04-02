@@ -6,20 +6,7 @@ spec:
   enabled: true
   pollInterval: 30s
   images:
-    - name: docker.io/library/alpine
-      tags:
-        - "3.19"
-        - "3.18"
-    - name: docker.io/library/busybox
-      tags:
-        - "1.36"
-        - "1.35"
     - name: docker.io/library/debian
       tags:
         - bookworm-slim
         - bullseye-slim
-        - buster-slim
-    - name: docker.io/library/ubuntu
-      tags:
-        - jammy
-        - noble
