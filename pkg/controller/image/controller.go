@@ -16,7 +16,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
-	"stvz.io/coral/pkg/monitor"
 	"stvz.io/coral/pkg/util"
 )
 
@@ -28,15 +27,13 @@ type Controller struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
-	Monitor  *monitor.Manager
 }
 
-func SetupWithManager(mgr ctrl.Manager, mtr *monitor.Manager) error {
+func SetupWithManager(mgr ctrl.Manager) error {
 	c := &Controller{
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("image-controller"),
-		Monitor:  mtr,
 	}
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&stvziov1.Image{}).
@@ -116,9 +113,6 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 		return ctrl.Result{}, nil
 	}
 
-	// Place the image resource under monitoring
-	c.Monitor.AddImage(ctx, observed.image)
-
 	return ctrl.Result{}, nil
 }
 
@@ -175,7 +169,6 @@ func (c *Controller) finish(ctx context.Context, image *stvziov1.Image) error {
 	}
 
 	logger.V(8).Info("removing monitor and finalizer")
-	c.Monitor.RemoveImage(image)
 	controllerutil.RemoveFinalizer(image, Finalizer)
 	return c.Client.Update(ctx, image)
 }

@@ -29,6 +29,7 @@ type Controller struct {
 	certs              string
 	leaderElection     bool
 	skipInsecureVerify bool
+	namespace          string
 
 	scheme *runtime.Scheme
 
@@ -76,7 +77,8 @@ func (c *Controller) RunE(cmd *cobra.Command, args []string) error {
 		os.Exit(1)
 	}
 
-	mtr := monitor.NewManager(mgr.GetClient(), log)
+	mtr := monitor.NewMonitor(mgr.GetClient(), c.namespace, log)
+	go mtr.Start(ctx)
 
 	if err = (&stvziov1.Image{}).SetupWebhookWithManager(mgr); err != nil {
 		log.Error(err, "unable to create webhook", "webhook", "Image")
@@ -88,7 +90,7 @@ func (c *Controller) RunE(cmd *cobra.Command, args []string) error {
 		os.Exit(1)
 	}
 
-	if err = controller.SetupWithManager(mgr, mtr); err != nil {
+	if err = controller.SetupWithManager(mgr); err != nil {
 		log.Error(err, "unable to setup controllers")
 		os.Exit(1)
 	}
@@ -113,5 +115,6 @@ func (c *Controller) Command() *cobra.Command {
 	cmd.PersistentFlags().BoolVarP(&c.leaderElection, "enable-leader-election", "", DefaultEnableLeaderElection, "enable leader election")
 	cmd.PersistentFlags().BoolVarP(&c.skipInsecureVerify, "skip-insecure-verify", "", DefaultSkipInsecureVerify, "skip certificate verification for the webhooks")
 	cmd.PersistentFlags().Int8VarP(&c.logLevel, "log-level", "", DefaultLogLevel, "set the log level (integer value)")
+	cmd.PersistentFlags().StringVarP(&c.namespace, "namespace", "n", DefaultNamespace, "limit the coral scope to a specific namespace")
 	return cmd
 }

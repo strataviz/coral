@@ -23,12 +23,28 @@ var (
 		[]string{"name", "namespace"},
 	)
 
+	monitorImagesTotal = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "coral_monitor_images_total",
+			Help: "The total number of nodes that have the image",
+		},
+		[]string{"name", "namespace"},
+	)
+
+	monitorNodesTotal = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "coral_monitor_nodes_total",
+			Help: "The total number of nodes under management for the image",
+		},
+		[]string{"name", "namespace"},
+	)
+
 	monitorImagesPending = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name: "coral_monitor_images_pending",
 			Help: "The number of nodes that have the image pending",
 		},
-		[]string{"name", "namespace", "image"},
+		[]string{"name", "namespace"},
 	)
 
 	monitorImagesAvailable = prometheus.NewGaugeVec(
@@ -36,7 +52,7 @@ var (
 			Name: "coral_monitor_images_available",
 			Help: "The number of nodes that have the image available",
 		},
-		[]string{"name", "namespace", "image"},
+		[]string{"name", "namespace"},
 	)
 
 	monitorImagesDeleting = prometheus.NewGaugeVec(
@@ -44,15 +60,15 @@ var (
 			Name: "coral_monitor_images_deleting",
 			Help: "The number of nodes that have the image deleting",
 		},
-		[]string{"name", "namespace", "image"},
+		[]string{"name", "namespace"},
 	)
 
-	monitorTotalNodesSelected = prometheus.NewGaugeVec(
+	monitorImagesUnknown = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Name: "coral_monitor_total_nodes_selected",
-			Help: "The number of nodes that were selected for monitoring",
+			Name: "coral_monitor_images_unknown",
+			Help: "The number of nodes that have the image in an unknown state",
 		},
-		[]string{"name", "namespace", "image"},
+		[]string{"name", "namespace"},
 	)
 )
 
@@ -62,5 +78,7 @@ func init() {
 	metrics.Registry.MustRegister(monitorImagesPending)
 	metrics.Registry.MustRegister(monitorImagesAvailable)
 	metrics.Registry.MustRegister(monitorImagesDeleting)
-	metrics.Registry.MustRegister(monitorTotalNodesSelected)
+	metrics.Registry.MustRegister(monitorImagesUnknown)
+	metrics.Registry.MustRegister(monitorImagesTotal)
+	metrics.Registry.MustRegister(monitorNodesTotal)
 }

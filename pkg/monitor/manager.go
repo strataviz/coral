@@ -3,6 +3,7 @@ package monitor
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/types"
@@ -10,81 +11,100 @@ import (
 	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
 )
 
-type Manager struct {
-	images map[types.NamespacedName]*Monitor
-	client client.Client
-	log    logr.Logger
+const (
+	// DefaultMonitorQueueSize is the default size of the monitor queue.  Potentially
+	// make this configurable in the future.
+	DefaultMonitorQueueSize = 1000
+	DefaultMonitorWorkers   = 1
+	DefaultMonitorInterval  = 5 * time.Second
+)
 
-	wg       sync.WaitGroup
-	stopOnce sync.Once
+type Monitor struct {
+	client    client.Client
+	log       logr.Logger
+	namespace string
+	stopOnce  sync.Once
+	stopChan  chan struct{}
 	sync.Mutex
 }
 
-func NewManager(c client.Client, log logr.Logger) *Manager {
-	return &Manager{
-		client: c,
-		images: make(map[types.NamespacedName]*Monitor),
-		log:    log,
+func NewMonitor(c client.Client, ns string, log logr.Logger) *Monitor {
+	return &Monitor{
+		client:    c,
+		namespace: ns,
+		log:       log,
+		stopChan:  make(chan struct{}),
 	}
 }
 
-func (m *Manager) Stop() {
-	m.stopOnce.Do(func() {
-		m.Lock()
-		defer m.Unlock()
-
-		for _, monitor := range m.images {
-			monitor.Stop()
-		}
-		m.wg.Wait()
-	})
-}
-
-func (m *Manager) AddImage(ctx context.Context, image *stvziov1.Image) {
+func (m *Monitor) Start(ctx context.Context) {
 	m.Lock()
 	defer m.Unlock()
 
-	nn := types.NamespacedName{
-		Namespace: image.GetNamespace(),
-		Name:      image.GetName(),
+	ch := make(chan types.NamespacedName, DefaultMonitorQueueSize)
+
+	var wg sync.WaitGroup
+	// Start workers to monitor the images.
+	for i := 0; i < DefaultMonitorWorkers; i++ {
+		wg.Add(1)
+		worker := NewWorker(m.client).WithLogger(m.log)
+		go func() {
+			defer wg.Done()
+			worker.Start(ctx, ch)
+		}()
 	}
 
-	// If the image is already being monitored, stop it first.
-	if m, ok := m.images[nn]; ok {
-		m.Stop()
-	}
-
-	monitor := NewMonitor(m.client, nn).WithLogger(m.log)
-	m.images[nn] = monitor
-
-	m.log.V(4).Info("starting monitor", "image", nn)
-	m.wg.Add(1)
 	go func() {
-		defer m.wg.Done()
-		monitor.Start(ctx)
+		timer := time.NewTicker(DefaultMonitorInterval)
+		defer timer.Stop()
+
+		for {
+			select {
+			case <-m.stopChan:
+				close(ch)
+				wg.Wait()
+				return
+			case <-ctx.Done():
+				m.Stop()
+			case <-timer.C:
+				err := m.send(ctx, ch)
+				if err != nil {
+					m.log.Error(err, "failed to gather images")
+					monitorError.WithLabelValues("send").Inc()
+					continue
+				}
+			}
+		}
 	}()
 }
 
-func (m *Manager) RemoveImage(image *stvziov1.Image) {
-	m.Lock()
-	defer m.Unlock()
-
-	nn := types.NamespacedName{
-		Namespace: image.GetNamespace(),
-		Name:      image.GetName(),
-	}
-
-	if monitor, ok := m.images[nn]; ok {
-		m.log.V(4).Info("stopping monitor", "image", nn)
-		monitor.Stop()
-		delete(m.images, nn)
-	}
+func (m *Monitor) Stop() {
+	m.stopOnce.Do(func() {
+		close(m.stopChan)
+	})
 }
 
-func (m *Manager) HasImage(nn types.NamespacedName) bool {
-	m.Lock()
-	defer m.Unlock()
+// send gets all the images that it knows about and sends them to the work queue.  It
+// supports both namespaced and cluster-scoped images depending on the controller
+// configuration.  The conversion  of the image to a namespaced name is done
+// intentionally to force the worker to get the image prior to monitoring and
+// updating the status in case we end up blocking for an extended period of time on
+// the channel.
+func (m *Monitor) send(ctx context.Context, ch chan<- types.NamespacedName) error {
+	// Get all the images in the namespace.
+	m.log.V(10).Info("gathering images")
+	images := &stvziov1.ImageList{}
+	err := m.client.List(ctx, images, client.InNamespace(m.namespace))
+	if err != nil {
+		return err
+	}
 
-	_, ok := m.images[nn]
-	return ok
+	for _, image := range images.Items {
+		ch <- types.NamespacedName{
+			Namespace: image.Namespace,
+			Name:      image.Name,
+		}
+
+	}
+	return nil
 }
