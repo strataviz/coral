@@ -76,7 +76,7 @@ func (c *Controller) RunE(cmd *cobra.Command, args []string) error {
 		os.Exit(1)
 	}
 
-	mtr := monitor.NewManager(mgr.GetClient(), mgr.GetCache(), log)
+	mtr := monitor.NewManager(mgr.GetClient(), log)
 
 	if err = (&stvziov1.Image{}).SetupWebhookWithManager(mgr); err != nil {
 		log.Error(err, "unable to create webhook", "webhook", "Image")

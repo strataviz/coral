@@ -32,7 +32,7 @@ type StateObserver struct {
 func (o *StateObserver) observe(ctx context.Context, observed *ObservedState) error {
 	var err error
 	var observedImage = new(stvziov1.Image)
-	err = o.observeImage(ctx, o.Request.NamespacedName, observedImage)
+	err = o.Client.Get(ctx, o.Request.NamespacedName, observedImage)
 	if err != nil {
 		if client.IgnoreNotFound(err) != nil {
 			return err
@@ -43,8 +43,4 @@ func (o *StateObserver) observe(ctx context.Context, observed *ObservedState) er
 	observed.image = observedImage
 
 	return nil
-}
-
-func (o *StateObserver) observeImage(ctx context.Context, name client.ObjectKey, img *stvziov1.Image) error {
-	return o.Client.Get(ctx, name, img)
 }

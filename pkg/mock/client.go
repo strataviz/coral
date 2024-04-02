@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/testing"
@@ -64,6 +65,12 @@ func (m *Client) WithFixtureOrDie(filename ...string) *Client {
 			if err != nil {
 				panic(err)
 			}
+
+			// Fake some of the creation metadata.  There's probably a few other
+			// things that could be useful.
+			obj.(client.Object).SetCreationTimestamp(metav1.Time{
+				Time: metav1.Now().Time,
+			})
 
 			m.tracker.Add(obj)
 		}
