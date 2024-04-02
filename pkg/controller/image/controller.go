@@ -68,16 +68,12 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 		}, err
 	}
 
-	logger.V(8).Info("observed image", "obj", observed.image)
-
-	// TODO: I think there'a an issue here.  I'm using this to catch any potential races
-	// where the image has been deleted and can't be found, but I'm not sure this is the
-	// only case where a nil value could happen without an error.  I think that's the case
-	// but not quite sure.
+	// The image has been deleted.
 	if observed.image == nil {
-		logger.V(8).Info("image not found, exiting reconcile loop")
 		return ctrl.Result{}, nil
 	}
+
+	logger.V(8).Info("observed image", "obj", observed.image)
 
 	// TODO: Because we don't do anything with the image we could just return without
 	// a requeue here.  Check this out later.
