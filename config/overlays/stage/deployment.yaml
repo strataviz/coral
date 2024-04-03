@@ -19,7 +19,7 @@ spec:
       serviceAccountName: coral-system
       containers:
         - name: controller
-          image: docker.io/golang:latest
+          image: coral:staging
           imagePullPolicy: IfNotPresent
           workingDir: /usr/src/app
           env:
@@ -28,8 +28,9 @@ spec:
               fieldRef:
                 fieldPath: spec.nodeName
           command:
-            - sleep
-            - infinity
+            - /coral
+            - controller
+            - --log-level=8
           securityContext:
             runAsUser: 0
             runAsGroup: 0

@@ -18,10 +18,12 @@ spec:
       serviceAccountName: coral-system
       containers:
       - name: agent
-        image: docker.io/strataviz/coral:latest
+        image: coral:staging
+        workingDir: /usr/src/app
         command:
         - /coral
         - agent
+        - --log-level=8
         imagePullPolicy: IfNotPresent
         env:
         - name: NODE_NAME
@@ -38,7 +40,12 @@ spec:
         volumeMounts:
         - name: varrun
           mountPath: "/kubelet"
+        - name: app
+          mountPath: /usr/src/app
       volumes:
       - name: varrun
         hostPath:
           path: /var/run
+      - name: app
+        hostPath:
+          path: /app

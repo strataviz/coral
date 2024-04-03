@@ -1,18 +1,18 @@
 # Notes
 
 ## CURRENT
-* Set up dependabot, branch protection, and actions.
-* Dockerfiles.
-* Package manifests.
+* Deploy to dockerhub.
+* Package manifests and install docs.
+* Ensure that we have sane defaults set for the agent.
 
 ## MVP
-* Create a new type called RegistryMirror.  I think that we actually create a more wholistic process here where we have a producer that pushes into a queue then a set of consumers that mirror images.  There will be a new injection rule that will transform images to use the local repository only.  That way they can keep the pull, but still restrict external pulling (and it's quicker).  Initially it requires a local registry to be available.  This may be pushed off depending on time (maybe push this off).
-* Fix all known bugs.
+* Create a new type called RegistryMirror.  The registry mirror will work similarly to the agent workers
+where a sync group will pull from external repositories into a local repository.  We'll need to use the 
 * Move TODO items into github issues.
 * Finish and polish the README and other docs.
 
 ## BUGS
-* Fix monitor selectors
+* The reauth on agent pulls seems to be failing back to the main loop instead of finding the auth and then blocking.  It still ends up pulling the image, but takes a couple iterations.
 
 ## LATER
 * Better monitor with dedicated workers instead of a single process per image.
