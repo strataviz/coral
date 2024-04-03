@@ -205,7 +205,7 @@ var _ = Describe("Images", func() {
 			// Lookup returns both the auth with the credentials and what appears to be an
 			// anonymous auth.  Order does not appear to change (anon is last).
 			id := func(element interface{}) string {
-				return string(element.(credentialprovider.AuthConfig).Username)
+				return element.(credentialprovider.AuthConfig).Username
 			}
 			Expect(auth).To(MatchElements(id, IgnoreExtras, Elements{
 				"testing": Equal(credentialprovider.AuthConfig{
@@ -244,7 +244,7 @@ var _ = Describe("Images", func() {
 			// Lookup returns both the auth with the credentials and what appears to be an
 			// anonymous auth.  Order does not appear to change (anon is last).
 			id := func(element interface{}) string {
-				return string(element.(credentialprovider.AuthConfig).Username)
+				return element.(credentialprovider.AuthConfig).Username
 			}
 			Expect(auth).To(MatchElements(id, IgnoreExtras, Elements{
 				"testing": Equal(credentialprovider.AuthConfig{
