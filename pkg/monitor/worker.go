@@ -54,16 +54,16 @@ func (m *Worker) run(ctx context.Context, nns types.NamespacedName) {
 		return
 	}
 
-	img, err := m.updateStates(ctx, image)
-	if err != nil {
-		m.log.Error(err, "failed to get image states")
-		return
-	}
-
 	// There is a race where the creation of the finalizer can occur after
 	// we get the image.  If the finalizer isn't present, it hasn't been
 	// through the reconcile loop yet and we'll skip updating the status.
 	if !controllerutil.ContainsFinalizer(image, stvziov1.Finalizer) {
+		return
+	}
+
+	img, err := m.updateStates(ctx, image)
+	if err != nil {
+		m.log.Error(err, "failed to get image states")
 		return
 	}
 
