@@ -59,6 +59,10 @@ func (m *Worker) run(ctx context.Context, nns types.NamespacedName) {
 		return
 	}
 
+	// TODO: There is a race where the creation of the finalizer can occur after
+	// we get the image.  May want to check to see if the finializer is present
+	// before we start monitoring (and to make things consistent, probably use
+	// the same in the agent).
 	err = m.client.Status().Update(ctx, img)
 	if err != nil {
 		m.log.Error(err, "failed to update image status")

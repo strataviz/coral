@@ -8,6 +8,19 @@ import (
 	runtime "k8s.io/cri-api/pkg/apis/runtime/v1"
 )
 
+type WorkerError string
+
+func (e WorkerError) Error() string { return string(e) }
+
+const (
+	ErrImageNotFound WorkerError = "image not found"
+	ErrTimeout       WorkerError = "timeout"
+	WaitTimeout      WorkerError = "image wait timeout"
+
+	DefaultWaitPollInterval = 2 * time.Second
+	DefaultWaitTimeout      = 5 * time.Minute
+)
+
 type Worker struct {
 	log logr.Logger
 	ims runtime.ImageServiceClient
@@ -48,58 +61,34 @@ func (w *Worker) process(ctx context.Context, event *Event) {
 	}
 }
 
-// pull will fetch the image from the registry.
-// TODO: clean this up.  It's a bit of a mess.
+// pull will fetch the image from the registry. If the image requires authentication,
+// it will attempt to authenticate with the first valid set of credentials.  Once
+// successfully authenticated it will cache the credentials for future use.  If the
+// cached credentials fail to authenticate, they will be removed from the cache and
+// it will attempt to authenticate with the provided credentials.
 func (w *Worker) pull(ctx context.Context, event *Event) error {
 	if len(event.Auth) == 0 {
-		_, err := w.ims.PullImage(ctx, &runtime.PullImageRequest{
-			Image: &runtime.ImageSpec{
-				Image: event.Image,
-			},
-		})
-		if err != nil {
-			w.log.Error(err, "failed to pull image", "image", event.Image)
-		}
-		return w.WaitImage(ctx, event.Image, true)
+		w.log.V(8).Info("attempting to pull image without credentials", "image", event.Image)
+		return w.pullImage(ctx, event.Image, nil)
 	}
 
-	// TODO: I'm not sure what the behavior will be here.  I'm assuming that it will
-	// send back an error if the auth fails, but since it's a non-blocking call,
-	// I'm unsure how it will be handled.
-
-	// Check the cache first.  If the creds work, we are good, if not, we'll need to
-	// try all the creds that have been passed.
 	if auth, ok := w.authCache[event.Image]; ok {
-		w.log.V(10).Info("image pulled with existing auth reauthenticating", "image", event.Image)
-		_, err := w.ims.PullImage(ctx, &runtime.PullImageRequest{
-			Image: &runtime.ImageSpec{
-				Image: event.Image,
-			},
-			Auth: auth,
-		})
-		if err == nil {
-			return w.WaitImage(ctx, event.Image, true)
-		} else {
-			w.log.V(10).Info("failed to pull image with existing auth", "image", event.Image)
+		err := w.pullImage(ctx, event.Image, auth)
+		// TODO: differentiate between auth errors and other errors.
+		if err != nil {
+			w.log.V(8).Error(err, "failed to pull image with cached credentials", "image", event.Image)
 			delete(w.authCache, event.Image)
 		}
 	}
 
-	w.log.V(8).Info("reauthenticating", "image", event.Image, "auths", event.Auth)
-
 	for _, auth := range event.Auth {
-		_, err := w.ims.PullImage(ctx, &runtime.PullImageRequest{
-			Image: &runtime.ImageSpec{
-				Image: event.Image,
-			},
-			Auth: auth,
-		})
+		w.log.V(8).Info("attempting to pull image with provided credentials", "image", event.Image, "username", auth.Username)
+		err := w.pullImage(ctx, event.Image, auth)
 		if err != nil {
-			w.log.Error(err, "unable to authenticate", "image", event.Image)
 			continue
 		} else {
 			w.authCache[event.Image] = auth
-			return w.WaitImage(ctx, event.Image, true)
+			return nil
 		}
 	}
 
@@ -117,14 +106,28 @@ func (w *Worker) remove(ctx context.Context, event *Event) error {
 		w.log.Error(err, "failed to remove image", "name", event.Image)
 	}
 
-	return w.WaitImage(ctx, event.Image, false)
+	return w.waitImage(ctx, event.Image, false)
 }
 
-func (w *Worker) WaitImage(ctx context.Context, image string, has bool) error {
-	timer := time.NewTicker(2 * time.Second)
+func (w *Worker) pullImage(ctx context.Context, image string, auth *runtime.AuthConfig) error {
+	_, err := w.ims.PullImage(ctx, &runtime.PullImageRequest{
+		Image: &runtime.ImageSpec{
+			Image: image,
+		},
+		Auth: auth,
+	})
+	if err != nil {
+		return err
+	}
+
+	return w.waitImage(ctx, image, true)
+}
+
+func (w *Worker) waitImage(ctx context.Context, image string, has bool) error {
+	timer := time.NewTicker(DefaultWaitPollInterval)
 	defer timer.Stop()
 
-	for {
+	for timeout := time.After(DefaultWaitTimeout); ; {
 		select {
 		case <-ctx.Done():
 			return nil
@@ -135,14 +138,13 @@ func (w *Worker) WaitImage(ctx context.Context, image string, has bool) error {
 				continue
 			}
 
-			i, ok := ids[image]
-			w.log.V(10).Info("waiting for image", "image", image, "has", has, "ok", ok, "id", i)
+			_, ok := ids[image]
 			if (ok && has) || (!ok && !has) {
 				return nil
 			}
-		case <-time.After(5 * time.Minute):
+		case <-timeout:
 			w.log.V(6).Info("timed out waiting for image", "image", image, "has", has)
-			return nil // maybe we should return an error here?
+			return WaitTimeout
 		}
 	}
 }

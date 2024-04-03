@@ -53,6 +53,7 @@ func (a *Agent) RunE(cmd *cobra.Command, args []string) error {
 	)
 
 	ctx := ctrl.SetupSignalHandler()
+	ctrl.SetLogger(log)
 
 	log.Info("starting agent")
 

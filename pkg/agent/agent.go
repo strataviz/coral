@@ -134,6 +134,10 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 		return err
 	}
 
+	// TODO: Once the workers pick up an event that leaves the queue empty so the
+	// loop will try to push on the same event again and then block until processed.
+	// I'm not sure if this is the best way to handle this, but it's mostly just an
+	// annoyance at this point.  I'll need to address this at some point.
 	for hash, state := range state {
 		name, ok := managedImages[hash]
 		// TODO: fix me, we want to be removing in the switch...
