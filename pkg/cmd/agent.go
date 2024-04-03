@@ -56,9 +56,9 @@ func (a *Agent) RunE(cmd *cobra.Command, args []string) error {
 
 	log.Info("starting agent")
 
-	nodeName := os.Getenv("CORAL_NODE_NAME")
+	nodeName := os.Getenv("NODE_NAME")
 	if nodeName == "" {
-		log.Error(nil, "CORAL_NODE_NAME must be set in the environment.")
+		log.Error(nil, "NODE_NAME must be set in the environment.")
 		os.Exit(1)
 	}
 

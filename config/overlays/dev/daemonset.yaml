@@ -28,7 +28,7 @@ spec:
         - --log-level=8
         imagePullPolicy: IfNotPresent
         env:
-        - name: CORAL_NODE_NAME
+        - name: NODE_NAME
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName

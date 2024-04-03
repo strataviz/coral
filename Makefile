@@ -1,9 +1,13 @@
 ENV ?= "dev"
-
 CONTROLLER_TOOLS_VERSION ?= v0.13.0
 ENVTEST_VERSION ?= latest
 GOLANGCI_LINT_VERSION ?= v1.54.2
 KUSTOMIZE_VERSION ?= latest
+
+GOOS := $(shell go env GOOS)
+GOARCH := $(shell go env GOARCH)
+VERSION ?= $(shell git describe --tags --always --dirty)
+LDFLAGS ?= "-s -w -X main.Version=$(VERSION)"
 
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 KUBECTL ?= kubectl
@@ -14,6 +18,20 @@ GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
 LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
 	mkdir -p $(LOCALBIN)
+
+.PHONY: build
+build:
+	@CGO_ENABLED=0 go build -trimpath --ldflags "-s -w -X build.Version=$(VERSION)" -o bin/coral
+
+.PHONY: staging-deploy
+staging-deploy:
+	@docker build -f Dockerfile . --tag coral:staging
+	@kind load docker-image coral:staging --name coral
+	@$(KUBECTL) apply -k config/overlays/stage
+
+.PHONY: staging-logs
+staging-logs:
+	@$(KUBECTL) logs -n coral -l app=coral -f --ignore-errors
 
 ###
 ### Generators
