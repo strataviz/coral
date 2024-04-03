@@ -15,7 +15,6 @@ import (
 )
 
 var _ = Describe("Images", func() {
-
 	Context("ListImages", func() {
 		It("should not return images with deletion timestamps", func() {
 			By("mocking a new client")
@@ -205,8 +204,11 @@ var _ = Describe("Images", func() {
 			Expect(found).To(BeTrue())
 			// Lookup returns both the auth with the credentials and what appears to be an
 			// anonymous auth.  Order does not appear to change (anon is last).
-			Expect(auth).To(Equal([]credentialprovider.AuthConfig{
-				{
+			id := func(element interface{}) string {
+				return string(element.(credentialprovider.AuthConfig).Username)
+			}
+			Expect(auth).To(MatchElements(id, IgnoreExtras, Elements{
+				"testing": Equal(credentialprovider.AuthConfig{
 					Username:      "testing",
 					Password:      "thisisnotmypassword",
 					Auth:          "",
@@ -214,16 +216,7 @@ var _ = Describe("Images", func() {
 					ServerAddress: "",
 					IdentityToken: "",
 					RegistryToken: "",
-				},
-				{
-					Username:      "",
-					Password:      "",
-					Auth:          "",
-					Email:         "",
-					ServerAddress: "",
-					IdentityToken: "",
-					RegistryToken: "",
-				},
+				}),
 			}))
 
 			By("looking up a non-indexed value")
@@ -250,8 +243,11 @@ var _ = Describe("Images", func() {
 			auth := image[0].AuthLookup("docker.io/strataviz/pyflink:1.17")
 			// Lookup returns both the auth with the credentials and what appears to be an
 			// anonymous auth.  Order does not appear to change (anon is last).
-			Expect(auth).To(Equal([]credentialprovider.AuthConfig{
-				{
+			id := func(element interface{}) string {
+				return string(element.(credentialprovider.AuthConfig).Username)
+			}
+			Expect(auth).To(MatchElements(id, IgnoreExtras, Elements{
+				"testing": Equal(credentialprovider.AuthConfig{
 					Username:      "testing",
 					Password:      "thisisnotmypassword",
 					Auth:          "",
@@ -259,16 +255,7 @@ var _ = Describe("Images", func() {
 					ServerAddress: "",
 					IdentityToken: "",
 					RegistryToken: "",
-				},
-				{
-					Username:      "",
-					Password:      "",
-					Auth:          "",
-					Email:         "",
-					ServerAddress: "",
-					IdentityToken: "",
-					RegistryToken: "",
-				},
+				}),
 			}))
 		})
 
