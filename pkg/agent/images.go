@@ -60,7 +60,6 @@ func ListImages(ctx context.Context, c client.Client, ns string, nodeLabels map[
 	}
 
 	return images, nil
-
 }
 
 func (i *Image) AuthLookup(name string) []credentialprovider.AuthConfig {

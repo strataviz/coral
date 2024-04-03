@@ -60,7 +60,11 @@ func (a *Agent) Start(ctx context.Context) {
 		}(worker)
 	}
 
-	a.intervalRun(ctx, eq)
+	// TODO: pull logging out of the function and return descriptive errors.
+	err := a.intervalRun(ctx, eq)
+	if err != nil {
+		a.log.Error(err, "run failed")
+	}
 
 	timer := time.NewTicker(a.options.PollInterval)
 	for {
@@ -93,7 +97,7 @@ func (a *Agent) intervalRun(ctx context.Context, eq EventQueue) error {
 	return nil
 }
 
-func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) error {
+func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) error { // nolint:funlen
 	// Get all the matched images from the cache.
 	images, err := ListImages(ctx, a.client, a.options.Namespace, node.GetLabels())
 	if err != nil {
@@ -124,7 +128,11 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 
 	state := UpdateStateLabels(nodeLabels, nodeImages, managedImages)
 	labels := ReplaceImageLabels(node.GetLabels(), state)
-	node.UpdateLabels(ctx, a.client, labels)
+	err = node.UpdateLabels(ctx, a.client, labels)
+	if err != nil {
+		agentError.WithLabelValues("update_labels").Inc()
+		return err
+	}
 
 	for hash, state := range state {
 		name, ok := managedImages[hash]

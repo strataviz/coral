@@ -1,7 +1,7 @@
 package util
 
 import (
-	"crypto/md5"
+	"crypto/md5" // #nosec
 	"fmt"
 	"math/rand"
 )
@@ -47,7 +47,7 @@ func FilterMapFunc[S, T comparable](a map[S]T, fn func(S, T) bool) map[S]T {
 	return result
 }
 
-// TODO: integrate the hashing into this
+// TODO: integrate the hashing into this.
 func ImageLabelKey(hash string) string {
 	return fmt.Sprintf("%s%s", LabelPrefix, hash)
 }
@@ -58,7 +58,7 @@ func HashedImageLabelKey(name string) string {
 }
 
 func ImageHasher(name string) string {
-	hasher := md5.New()
+	hasher := md5.New() // #nosec
 	hasher.Write([]byte(name))
 	return fmt.Sprintf("%x", hasher.Sum(nil))
 }
@@ -68,7 +68,7 @@ func RandString(n int) string {
 	chars := []rune("abcdefghijklmnopqrstuvwxyz1234567890")
 
 	for i := range b {
-		b[i] = chars[rand.Intn(len(chars))]
+		b[i] = chars[rand.Intn(len(chars))] // #nosec
 	}
 
 	return string(b)

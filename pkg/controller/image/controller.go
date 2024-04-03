@@ -79,7 +79,7 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 
 	// TODO: Because we don't do anything with the image we could just return without
 	// a requeue here.  Check this out later.
-	if observed.image.DeletionTimestamp.IsZero() {
+	if observed.image.DeletionTimestamp.IsZero() { // nolint:nestif
 		has := controllerutil.ContainsFinalizer(observed.image, Finalizer)
 		if !has {
 			logger.V(8).Info("adding finalizer and monitor", "finalizer", Finalizer)

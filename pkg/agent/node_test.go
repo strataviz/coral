@@ -1,6 +1,8 @@
 package agent
 
 import (
+	"path"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -14,7 +16,8 @@ var _ = Describe("Node", func() {
 			// TODO: probably pull this out into a larger environment setup
 			// It would be pretty nice to even handle namespacing.
 			By("mocking a new client")
-			c := mock.NewClient().WithLogger(logger).LoadAllOrDie(fixtures)
+			file := path.Join(fixtures, "nodes.yaml")
+			c := mock.NewClient().WithLogger(logger).WithFixtureOrDie(file)
 
 			By("getting the node")
 			node, err := GetNode(ctx, "node1", c)
@@ -26,7 +29,8 @@ var _ = Describe("Node", func() {
 	Context("HasImage", func() {
 		It("should return true if the image is available", func() {
 			By("mocking a new client")
-			c := mock.NewClient().WithLogger(logger).LoadAllOrDie(fixtures)
+			file := path.Join(fixtures, "nodes.yaml")
+			c := mock.NewClient().WithLogger(logger).WithFixtureOrDie(file)
 
 			By("getting the node")
 			node, err := GetNode(ctx, "node1", c)
@@ -39,7 +43,8 @@ var _ = Describe("Node", func() {
 
 		It("should return false if the image is not available", func() {
 			By("mocking a new client")
-			c := mock.NewClient().WithLogger(logger).LoadAllOrDie(fixtures)
+			file := path.Join(fixtures, "nodes.yaml")
+			c := mock.NewClient().WithLogger(logger).WithFixtureOrDie(file)
 
 			By("getting the node")
 			node, err := GetNode(ctx, "node1", c)
@@ -53,7 +58,8 @@ var _ = Describe("Node", func() {
 	Context("ImageHashMap", func() {
 		It("should return a map of image names keyed by their label hashes", func() {
 			By("mocking a new client")
-			c := mock.NewClient().WithLogger(logger).LoadAllOrDie(fixtures)
+			file := path.Join(fixtures, "nodes.yaml")
+			c := mock.NewClient().WithLogger(logger).WithFixtureOrDie(file)
 
 			By("getting the node")
 			node, err := GetNode(ctx, "node1", c)
@@ -70,7 +76,8 @@ var _ = Describe("Node", func() {
 	Context("IsReady", func() {
 		It("should return true if the node is ready", func() {
 			By("mocking a new client")
-			c := mock.NewClient().WithLogger(logger).LoadAllOrDie(fixtures)
+			file := path.Join(fixtures, "nodes.yaml")
+			c := mock.NewClient().WithLogger(logger).WithFixtureOrDie(file)
 
 			By("getting the node")
 			node, err := GetNode(ctx, "node1", c)
@@ -82,7 +89,8 @@ var _ = Describe("Node", func() {
 
 		It("should return false if the node is not ready", func() {
 			By("mocking a new client")
-			c := mock.NewClient().WithLogger(logger).LoadAllOrDie(fixtures)
+			file := path.Join(fixtures, "not-ready-nodes.yaml")
+			c := mock.NewClient().WithLogger(logger).WithFixtureOrDie(file)
 
 			By("getting the node")
 			node, err := GetNode(ctx, "notready", c)
@@ -94,7 +102,8 @@ var _ = Describe("Node", func() {
 
 		It("should return false if there is disk pressure", func() {
 			By("mocking a new client")
-			c := mock.NewClient().WithLogger(logger).LoadAllOrDie(fixtures)
+			file := path.Join(fixtures, "not-ready-nodes.yaml")
+			c := mock.NewClient().WithLogger(logger).WithFixtureOrDie(file)
 
 			By("getting the node")
 			node, err := GetNode(ctx, "diskpressure", c)
@@ -106,7 +115,8 @@ var _ = Describe("Node", func() {
 
 		It("should return false if there is pid pressure", func() {
 			By("mocking a new client")
-			c := mock.NewClient().WithLogger(logger).LoadAllOrDie(fixtures)
+			file := path.Join(fixtures, "not-ready-nodes.yaml")
+			c := mock.NewClient().WithLogger(logger).WithFixtureOrDie(file)
 
 			By("getting the node")
 			node, err := GetNode(ctx, "pidpressure", c)
@@ -120,7 +130,8 @@ var _ = Describe("Node", func() {
 	Context("Refresh", func() {
 		It("should refresh the node", func() {
 			By("mocking a new client")
-			c := mock.NewClient().WithLogger(logger).LoadAllOrDie(fixtures)
+			file := path.Join(fixtures, "nodes.yaml")
+			c := mock.NewClient().WithLogger(logger).WithFixtureOrDie(file)
 
 			By("getting the node")
 			node, err := GetNode(ctx, "node1", c)

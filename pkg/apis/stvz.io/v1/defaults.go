@@ -50,7 +50,7 @@ func defaultedImage(obj *Image) {
 
 // Defaulted sets the resource defaults.
 func Defaulted(obj client.Object) {
-	switch obj := obj.(type) {
+	switch obj := obj.(type) { //nolint:gocritic
 	case *Image:
 		defaultedImage(obj)
 	}

@@ -72,7 +72,10 @@ func (m *Client) WithFixtureOrDie(filename ...string) *Client {
 				Time: metav1.Now().Time,
 			})
 
-			m.tracker.Add(obj)
+			err = m.tracker.Add(obj)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 	return m

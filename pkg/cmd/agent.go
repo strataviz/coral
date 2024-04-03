@@ -48,7 +48,6 @@ func NewAgent() *Agent {
 }
 
 func (a *Agent) RunE(cmd *cobra.Command, args []string) error {
-
 	log := zap.New(
 		zap.Level(zapcore.Level(a.logLevel) * -1),
 	)
@@ -90,7 +89,13 @@ func (a *Agent) RunE(cmd *cobra.Command, args []string) error {
 	// gracefully, so we'll just start it and forget about it.  I may come back to this
 	// and strip out the built-in for strata-go, though I'd be missing out on some
 	// good default metrics.
-	go metrics.Start(ctx)
+	go func() {
+		err := metrics.Start(ctx)
+		if err != nil {
+			log.Error(err, "failed to start metrics server")
+			os.Exit(1)
+		}
+	}()
 
 	options := &agent.AgentOptions{
 		Log:                  log,
