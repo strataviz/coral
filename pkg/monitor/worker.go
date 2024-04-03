@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
 	"stvz.io/coral/pkg/util"
 )
@@ -59,10 +60,13 @@ func (m *Worker) run(ctx context.Context, nns types.NamespacedName) {
 		return
 	}
 
-	// TODO: There is a race where the creation of the finalizer can occur after
-	// we get the image.  May want to check to see if the finializer is present
-	// before we start monitoring (and to make things consistent, probably use
-	// the same in the agent).
+	// There is a race where the creation of the finalizer can occur after
+	// we get the image.  If the finalizer isn't present, it hasn't been
+	// through the reconcile loop yet and we'll skip updating the status.
+	if !controllerutil.ContainsFinalizer(image, stvziov1.Finalizer) {
+		return
+	}
+
 	err = m.client.Status().Update(ctx, img)
 	if err != nil {
 		m.log.Error(err, "failed to update image status")

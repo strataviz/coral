@@ -19,10 +19,6 @@ import (
 	"stvz.io/coral/pkg/util"
 )
 
-const (
-	Finalizer = "image.stvz.io/finalizer"
-)
-
 type Controller struct {
 	client.Client
 	Scheme   *runtime.Scheme
@@ -80,10 +76,10 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 	// TODO: Because we don't do anything with the image we could just return without
 	// a requeue here.  Check this out later.
 	if observed.image.DeletionTimestamp.IsZero() { // nolint:nestif
-		has := controllerutil.ContainsFinalizer(observed.image, Finalizer)
+		has := controllerutil.ContainsFinalizer(observed.image, stvziov1.Finalizer)
 		if !has {
-			logger.V(8).Info("adding finalizer and monitor", "finalizer", Finalizer)
-			controllerutil.AddFinalizer(observed.image, Finalizer)
+			logger.V(8).Info("adding finalizer and monitor", "finalizer", stvziov1.Finalizer)
+			controllerutil.AddFinalizer(observed.image, stvziov1.Finalizer)
 			err := c.Client.Update(ctx, observed.image)
 			if err != nil {
 				return ctrl.Result{
@@ -96,8 +92,8 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 		// the finalizer in the background.  The controller could then keep track of the time
 		// that it was taking to clean up and potentially alert.  Just need to think through
 		// how it would react if the cleanup failed or the controller was restarted.
-		if controllerutil.ContainsFinalizer(observed.image, Finalizer) {
-			logger.V(8).Info("waiting for nodes to remove the images, shutting down monitor, and removing finalizer", "finalizer", Finalizer)
+		if controllerutil.ContainsFinalizer(observed.image, stvziov1.Finalizer) {
+			logger.V(8).Info("waiting for nodes to remove the images, shutting down monitor, and removing finalizer", "finalizer", stvziov1.Finalizer)
 			err := c.finish(ctx, observed.image)
 			if err != nil && err.Error() == ErrNodesNotEmpty.Error() {
 				logger.V(6).Info("nodes still have images, waiting for cleanup")
@@ -169,6 +165,6 @@ func (c *Controller) finish(ctx context.Context, image *stvziov1.Image) error {
 	}
 
 	logger.V(8).Info("removing monitor and finalizer")
-	controllerutil.RemoveFinalizer(image, Finalizer)
+	controllerutil.RemoveFinalizer(image, stvziov1.Finalizer)
 	return c.Client.Update(ctx, image)
 }

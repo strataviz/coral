@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: images.stvz.io
 spec:
   group: stvz.io
@@ -59,8 +59,6 @@ spec:
             type: object
           spec:
             properties:
-              enabled:
-                type: boolean
               imagePullSecrets:
                 items:
                   properties:
@@ -85,9 +83,9 @@ spec:
                   - name
                   - tags
                   type: object
+                maxItems: 100
+                minItems: 1
                 type: array
-              pollInterval:
-                type: string
               selector:
                 items:
                   properties:
@@ -106,6 +104,8 @@ spec:
                   type: object
                 nullable: true
                 type: array
+            required:
+            - images
             type: object
           status:
             properties:

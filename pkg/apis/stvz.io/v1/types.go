@@ -23,28 +23,14 @@ import (
 
 // +kubebuilder:docs-gen:collapse=Go imports
 
-type RestartPolicy string
-
 const (
-	// RestartPolicyNever indicates that the resources using an updated image should never be restarted.
-	RestartPolicyNever RestartPolicy = "Never"
-	// RestartPolicyAlways indicates that the resources using an updated image should always be restarted.
-	RestartPolicyAlways RestartPolicy = "Always"
-	// RestartPolicyAnnotation indicates that the resources using an updated image should be restarted if the annotation is present.
-	RestartPolicyAnnotation RestartPolicy = "Annotation"
+	Finalizer = "stvz.io/finalizer"
 )
 
 type NodeSelector struct {
 	Key      string             `json:"key"`
 	Operator selection.Operator `json:"operator"`
 	Values   []string           `json:"values"`
-}
-
-type ImageSpecRegistry struct {
-	// +required
-	// URL is the URL of the registry to mirror the image to.  The registry must be accessible from
-	// the daemonsets that run on the nodes, and must also support the docker registry API V2.
-	URL *string `json:"url"`
 }
 
 type ImageSpecImages struct {
@@ -64,19 +50,12 @@ type ImageSpecImages struct {
 // ImageSpec is the spec for a Image resource.
 type ImageSpec struct {
 	// +optional
-	// Enabled indicates whether the image synchronization is enabled.  This defaults to true.
-	Enabled *bool `json:"enabled"`
-	// +optional
 	// +nullable
 	// Selector defines which nodes the image should be synced to.
 	Selector []NodeSelector `json:"selector"`
-	// +optional
-	// PollInterval is the interval to poll the registry for new images.  This defaults to 5 minutes with a 1 minute splay.
-	PollInterval *metav1.Duration `json:"pollInterval"`
-	// +optional
-	// RestartPolicy is the policy to use when the image is updated.  I'm not sure that I want this though.  This defaults to Never.
-	// RestartPolicy *RestartPolicy `json:"restartPolicy"`
 	// +required
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=100
 	Images []ImageSpecImages `json:"images"`
 	// +optional
 	// +nullable
