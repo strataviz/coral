@@ -124,8 +124,8 @@ var _ = Describe("Image functions:", func() {
 				}`),
 			}
 
-			decoder := admission.NewDecoder(scheme.Scheme)
-			mutator := NewMutator(logger)
+			decoder = admission.NewDecoder(scheme.Scheme)
+			mutator = NewMutator(logger)
 			Expect(mutator.FromReq(req, decoder)).To(Succeed())
 			Expect(mutator.policy).To(BeTrue())
 			Expect(mutator.include).To(ConsistOf("name1"))
@@ -558,7 +558,7 @@ var _ = Describe("Image functions:", func() {
 			}
 			got := mutator.manageSelectors(spec)
 			Expect(got.NodeSelector).To(HaveKeyWithValue("kubernetes.io/arch", "arm64"))
-			//Expect(got.NodeSelector).To(HaveKeyWithValue("image.stvz.io/e28d47094db7c64507211886dcba74c9", "available"))
+			// Expect(got.NodeSelector).To(HaveKeyWithValue("image.stvz.io/e28d47094db7c64507211886dcba74c9", "available"))
 			Expect(got.NodeSelector).To(HaveKeyWithValue("image.stvz.io/52eacfd06bb1d06c9b440400a88c6fac", "available"))
 
 			spec.Containers[0].Image = "docker.io/library/debian:bookworm-slim"

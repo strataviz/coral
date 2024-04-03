@@ -111,28 +111,28 @@ func (m *Mutator) mutate(obj client.Object) client.Object {
 	// Otherwise, handle the policy
 	switch m.kind {
 	case "CronJob":
-		o := m.obj.(*batchv1.CronJob)
+		o, _ := m.obj.(*batchv1.CronJob)
 		o.Spec.JobTemplate.Spec.Template.Spec = m.manage(o.Spec.JobTemplate.Spec.Template.Spec)
 	case "DaemonSet":
-		o := m.obj.(*appsv1.DaemonSet)
+		o, _ := m.obj.(*appsv1.DaemonSet)
 		o.Spec.Template.Spec = m.manage(o.Spec.Template.Spec)
 	case "Deployment":
-		o := m.obj.(*appsv1.Deployment)
+		o, _ := m.obj.(*appsv1.Deployment)
 		o.Spec.Template.Spec = m.manage(o.Spec.Template.Spec)
 	case "Job":
-		o := m.obj.(*batchv1.Job)
+		o, _ := m.obj.(*batchv1.Job)
 		o.Spec.Template.Spec = m.manage(o.Spec.Template.Spec)
 	case "ReplicaSet":
-		o := m.obj.(*appsv1.ReplicaSet)
+		o, _ := m.obj.(*appsv1.ReplicaSet)
 		o.Spec.Template.Spec = m.manage(o.Spec.Template.Spec)
 	case "ReplicationController":
-		o := m.obj.(*corev1.ReplicationController)
+		o, _ := m.obj.(*corev1.ReplicationController)
 		o.Spec.Template.Spec = m.manage(o.Spec.Template.Spec)
 	case "StatefulSet":
-		o := m.obj.(*appsv1.StatefulSet)
+		o, _ := m.obj.(*appsv1.StatefulSet)
 		o.Spec.Template.Spec = m.manage(o.Spec.Template.Spec)
 	case "Pod":
-		o := m.obj.(*corev1.Pod)
+		o, _ := m.obj.(*corev1.Pod)
 		o.Spec = m.manage(o.Spec)
 	}
 
@@ -161,21 +161,22 @@ func (m *Mutator) manage(spec corev1.PodSpec) corev1.PodSpec {
 
 func (m *Mutator) manageImagePullPolicy(spec corev1.PodSpec) corev1.PodSpec {
 	var containers []corev1.Container
-	if len(m.include) > 0 {
+	switch {
+	case len(m.include) > 0:
 		containers = util.ModifyFunc(spec.Containers, m.include, func(c corev1.Container, n string) corev1.Container {
 			if c.Name == n {
 				c.ImagePullPolicy = corev1.PullNever
 			}
 			return c
 		})
-	} else if len(m.exclude) > 0 {
+	case len(m.exclude) > 0:
 		containers = util.ModifyFunc(spec.Containers, m.exclude, func(c corev1.Container, n string) corev1.Container {
 			if c.Name != n {
 				c.ImagePullPolicy = corev1.PullNever
 			}
 			return c
 		})
-	} else {
+	default:
 		for _, c := range spec.Containers {
 			c.ImagePullPolicy = corev1.PullNever
 			containers = append(containers, c)
@@ -202,15 +203,16 @@ func (m *Mutator) manageSelectors(spec corev1.PodSpec) corev1.PodSpec {
 
 	var containers []corev1.Container
 	// Include will always take precedence over exclude.
-	if len(m.include) > 0 {
+	switch {
+	case len(m.include) > 0:
 		containers = util.FilterFunc(spec.Containers, m.include, func(c corev1.Container, n string) bool {
 			return c.Name == n
 		})
-	} else if len(m.exclude) > 0 {
+	case len(m.exclude) > 0:
 		containers = util.FilterFunc(spec.Containers, m.exclude, func(c corev1.Container, n string) bool {
 			return c.Name != n
 		})
-	} else {
+	default:
 		containers = spec.Containers
 	}
 

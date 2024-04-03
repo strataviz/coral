@@ -104,7 +104,6 @@ func (m *Monitor) send(ctx context.Context, ch chan<- types.NamespacedName) erro
 			Namespace: image.Namespace,
 			Name:      image.Name,
 		}
-
 	}
 	return nil
 }

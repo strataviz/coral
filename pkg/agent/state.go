@@ -22,11 +22,12 @@ func UpdateStateLabels(nodeLabels map[string]string, nodeImages map[string]strin
 	for k := range imageLabels {
 		_, managed := managedImages[k]
 		_, available := nodeImages[k]
-		if managed && available {
+		switch {
+		case managed && available:
 			labels[k] = string(stvziov1.ImageStateAvailable)
-		} else if managed && !available {
+		case managed && !available:
 			labels[k] = string(stvziov1.ImageStatePending)
-		} else if !managed && available {
+		case !managed && available:
 			labels[k] = string(stvziov1.ImageStateDeleting)
 		}
 	}
