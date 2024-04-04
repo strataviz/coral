@@ -52,12 +52,14 @@ func (w *Worker) process(ctx context.Context, event *Event) {
 		if err != nil {
 			w.log.Error(err, "failed to pull image", "image", event.Image)
 		}
+		w.log.V(8).Info("image pulled", "image", event.Image)
 	case Remove:
 		w.log.V(10).Info("removing image", "image", event.Image)
 		err := w.remove(ctx, event)
 		if err != nil {
 			w.log.Error(err, "failed to remove image", "image", event.Image)
 		}
+		w.log.V(8).Info("image removed", "image", event.Image)
 	}
 }
 
@@ -68,7 +70,7 @@ func (w *Worker) process(ctx context.Context, event *Event) {
 // it will attempt to authenticate with the provided credentials.
 func (w *Worker) pull(ctx context.Context, event *Event) error {
 	if len(event.Auth) == 0 {
-		w.log.V(8).Info("attempting to pull image without credentials", "image", event.Image)
+		w.log.V(4).Info("attempting to pull image without credentials", "image", event.Image)
 		return w.pullImage(ctx, event.Image, nil)
 	}
 
@@ -82,7 +84,7 @@ func (w *Worker) pull(ctx context.Context, event *Event) error {
 	}
 
 	for _, auth := range event.Auth {
-		w.log.V(8).Info("attempting to pull image with provided credentials", "image", event.Image, "username", auth.Username)
+		w.log.V(4).Info("attempting to pull image with provided credentials", "image", event.Image, "username", auth.Username)
 		err := w.pullImage(ctx, event.Image, auth)
 		if err != nil {
 			continue

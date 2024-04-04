@@ -24,7 +24,7 @@ import (
 // +kubebuilder:docs-gen:collapse=Go imports
 
 const (
-	Finalizer = "stvz.io/finalizer"
+	Finalizer = "image.stvz.io/finalizer"
 )
 
 type NodeSelector struct {

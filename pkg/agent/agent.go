@@ -71,6 +71,7 @@ func (a *Agent) Start(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			a.log.Info("stopping agent")
+			close(eq)
 			wg.Wait()
 			return
 		case <-timer.C:
@@ -119,7 +120,30 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 			}
 		}
 	}
-	// nodeImages := node.ImageHashMap()
+
+	// TODO:  I'd like to get to a place where I'm keying by the name and not the
+	// label hash to make things a bit more clean.  The problem is that I'd need to
+	// convert the hashes from the labels to get the current node state.
+
+	// If the image is in the list of managed images then we check available or not.
+	// if not available, then it's pending and if is available then it's available.
+	// if the image is not in the list of managed images and it's available, then we
+	// then it's deleting.  The one thing that we do need though is the labels as that
+	// is kind of how we track history.  On the other hand, could we introduce a new
+	// history object that we could use to track the history of the image on the node
+	// and not have to worry about the labels...  It feels like that could be a more
+	// reliable way to track the images.  The monitor would be the thing that would
+	// need to update the global state (pending/etc) and the worker wouldn't be relying
+	// on it for state at all.  That introduces problems though as you'd need to maintain
+	// a pretty large history of the images on the node or you only keep the current
+	// active ones.
+
+	// Benefits:
+	// - track both the hashes and the names in one spot.
+	// - track the history of the images on the node (in mvp just the current active).
+	// - if tracking deletion, then the fininalizer would just update the status.
+	// - only one object to load and update.
+
 	nodeImages, err := ImageHashMap(ctx, a.options.ImageServiceClient)
 	if err != nil {
 		return err
