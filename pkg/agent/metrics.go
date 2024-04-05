@@ -37,13 +37,6 @@ var (
 			Help: "The number of image pulls.",
 		},
 	)
-
-	agentImageRemovals = prometheus.NewCounter(
-		prometheus.CounterOpts{
-			Name: "coral_agent_image_removals",
-			Help: "The number of image removals.",
-		},
-	)
 )
 
 func init() {
@@ -51,5 +44,4 @@ func init() {
 	metrics.Registry.MustRegister(agentImageError)
 	metrics.Registry.MustRegister(agentRunDuration)
 	metrics.Registry.MustRegister(agentImagePulls)
-	metrics.Registry.MustRegister(agentImageRemovals)
 }

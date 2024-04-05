@@ -4,7 +4,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gstruct"
-	"stvz.io/coral/pkg/util"
 )
 
 // +kubebuilder:docs-gen:collapse=Imports
@@ -87,11 +86,11 @@ var _ = Describe("Image functions:", func() {
 			}, IgnoreExtras, Elements{
 				"docker.io/library/debian:bookworm-slim": Equal(ImageData{
 					Name:  "docker.io/library/debian:bookworm-slim",
-					Label: util.HashedImageLabelKey("docker.io/library/debian:bookworm-slim"),
+					Label: HashedImageLabelKey("docker.io/library/debian:bookworm-slim"),
 				}),
 				"docker.io/library/debian:bullseye-slim": Equal(ImageData{
 					Name:  "docker.io/library/debian:bullseye-slim",
-					Label: util.HashedImageLabelKey("docker.io/library/debian:bullseye-slim"),
+					Label: HashedImageLabelKey("docker.io/library/debian:bullseye-slim"),
 				}),
 			}))
 		})

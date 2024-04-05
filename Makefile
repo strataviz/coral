@@ -73,7 +73,6 @@ vet:
 
 .PHONY: test
 test: deps
-	@KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" \
 	go test ./pkg/... -test.v
 
 .PHONY: lint

@@ -5,7 +5,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"stvz.io/coral/pkg/util"
+	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
 )
 
 // Node represents a kubernetes node with helpers for interacting with coral
@@ -34,18 +34,6 @@ func GetNode(ctx context.Context, n string, c client.Client) (*Node, error) {
 func (n *Node) HasImage(image string) bool {
 	_, ok := n.availableImages[image]
 	return ok
-}
-
-// ImageHashMap returns a map of image names keyed by their label hashes
-// based on all available images on the node.  Essentially, it just reverses
-// the key/value pairs of the availableImages map.
-func (n *Node) ImageHashMap() map[string]string {
-	m := make(map[string]string)
-	for k, v := range n.availableImages {
-		m[v] = k
-	}
-
-	return m
 }
 
 // IsReady returns true if the node is ready.
@@ -90,7 +78,7 @@ func (n *Node) getImages() {
 	for _, image := range n.Status.Images {
 		for _, name := range image.Names {
 			// TODO: update the util method.
-			images[name] = util.ImageLabelKey(util.ImageHasher(name))
+			images[name] = stvziov1.HashedImageLabelKey(name)
 		}
 	}
 

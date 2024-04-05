@@ -4,7 +4,7 @@ import (
 	"context"
 
 	runtime "k8s.io/cri-api/pkg/apis/runtime/v1"
-	"stvz.io/coral/pkg/util"
+	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
 )
 
 func GetImageIdentifiers(ctx context.Context, ims runtime.ImageServiceClient) (map[string]string, error) {
@@ -32,7 +32,7 @@ func ImageMap(ctx context.Context, ims runtime.ImageServiceClient) (map[string]s
 	tags := make(map[string]string)
 	for _, img := range resp.Images {
 		for _, tag := range img.RepoTags {
-			tags[tag] = util.HashedImageLabelKey(tag)
+			tags[tag] = stvziov1.HashedImageLabelKey(tag)
 		}
 	}
 

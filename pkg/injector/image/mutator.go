@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
 	"stvz.io/coral/pkg/util"
 )
 
@@ -198,7 +199,7 @@ func (m *Mutator) manageSelectors(spec corev1.PodSpec) corev1.PodSpec {
 	// way to do this, but the I don't expect the number of selectors to be
 	// large.
 	maps.DeleteFunc(selectors, func(k string, v string) bool {
-		return strings.HasPrefix(k, util.LabelPrefix)
+		return strings.HasPrefix(k, stvziov1.LabelPrefix)
 	})
 
 	var containers []corev1.Container
@@ -217,7 +218,7 @@ func (m *Mutator) manageSelectors(spec corev1.PodSpec) corev1.PodSpec {
 	}
 
 	for _, c := range containers {
-		selectors[util.ImageLabelKey(util.ImageHasher(c.Image))] = "available"
+		selectors[stvziov1.HashedImageLabelKey(c.Image)] = "available"
 	}
 
 	spec.NodeSelector = selectors

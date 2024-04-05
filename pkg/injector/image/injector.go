@@ -78,59 +78,6 @@ func (i *Injector) Handle(ctx context.Context, req admission.Request) admission.
 
 	// Run the mutators
 	return mutator.Mutate(req)
-
-	// I used labels for a reason, I didn't want to commit all resources to needing this service.
-	// We could set the hook to not fail if the service is not up if we still want to use annotations.
-	// We end up with a chicken and egg problem if we use a hook like that.
-	// if enabled, ok := req.Object.(client.Object).GetAnnotations()["image.stvz.io/inject"]; !ok || enabled != "true" {
-	// 	return i.defaultAction
-	// }
-
-	// We have it set to ignore webhook failures.  The thing I don't like about this is that we can't
-	// tell if the service has failed immediately and we'd either need to have some sort of search to ensure
-	// that the annotations are there.  We can't do that with annotations though so we have to use labels,
-	// which takes us back to where we were at the beginning.
-
-	// annotations := req.Object.(client.Object).GetAnnotations()
-	// if _, ok := annotations["image.stvz.io/inject"]; !ok {
-	// 	return admission.Allowed("")
-	// }
-
-	// switch req.Kind.Kind {
-	// case "Deployment":
-	// 	return i.deployments(req)
-	// default:
-	// 	return i.defaultAction
-	// 	// return admission.Errored(http.StatusBadRequest, fmt.Errorf("kind not supported: %s", req.Kind))
-	// }
-
-	// For replicasets and pods, if we have a object reference and it's one of our supported objects and
-	// we have injected - then just allow through since it's already been managed? Should be able to see
-	// that in the cache pretty quickly (or just make the decision to ignore since we are already managing it).
 }
-
-// func (i *Injector) deployments(req admission.Request) admission.Response {
-// 	deploy := &appsv1.Deployment{}
-// 	err := i.decoder.Decode(req, deploy)
-// 	if err != nil {
-// 		return admission.Errored(http.StatusBadRequest, err)
-// 	}
-
-// 	// if inject, has := deploy.GetAnnotations()["image.stvz.io/inject"]; !has {
-// 	// 	return admission.Allowed("")
-// 	// }
-
-// 	newDeploy := deploy.DeepCopy()
-
-// 	// if injectSettings, ok := req.Object.GetLabels()["image.stvz.io/inject"]; ok {
-// 	// 	// injectSettings :=
-// 	// }
-
-// 	marshaledDeploy, err := json.Marshal(newDeploy)
-// 	if err != nil {
-// 		return admission.Errored(http.StatusInternalServerError, err)
-// 	}
-// 	return admission.PatchResponseFromRaw(req.Object.Raw, marshaledDeploy)
-// }
 
 var _ admission.Handler = &Injector{}

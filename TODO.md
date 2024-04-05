@@ -15,7 +15,7 @@ where a sync group will pull from external repositories into a local repository.
 * Finish and polish the README and other docs.
 
 ## BUGS
-* NA
+* Agent loop will place new events for in-progress pu
 
 ## LATER
 * Better monitor with dedicated workers instead of a single process per image.
