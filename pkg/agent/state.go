@@ -27,11 +27,11 @@ func UpdateState(nodeImages map[string]string, managedImages map[string]string) 
 func ReplaceImageLabels(nodeLabels map[string]string, state map[string]string) map[string]string {
 	// Copy in the non-image labels
 	labels := util.FilterMapFunc(nodeLabels, func(k string, v string) bool {
-		return !strings.HasPrefix(k, util.LabelPrefix)
+		return !strings.HasPrefix(k, stvziov1.LabelPrefix)
 	})
 
 	for k, v := range state {
-		labels[util.HashedImageLabelKey(k)] = v
+		labels[stvziov1.HashedImageLabelKey(k)] = v
 	}
 
 	return labels

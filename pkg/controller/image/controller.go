@@ -16,7 +16,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
-	"stvz.io/coral/pkg/util"
 )
 
 type Controller struct {
@@ -144,7 +143,7 @@ func (c *Controller) finish(ctx context.Context, image *stvziov1.Image) error {
 	for _, i := range image.Spec.Images {
 		for _, tag := range i.Tags {
 			tagSelectors := selectors.DeepCopySelector()
-			label := util.HashedImageLabelKey(*i.Name + ":" + tag)
+			label := stvziov1.HashedImageLabelKey(*i.Name + ":" + tag)
 			reqs, err := labels.NewRequirement(label, selection.Exists, nil)
 			if err != nil {
 				return err

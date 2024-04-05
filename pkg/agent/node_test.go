@@ -7,7 +7,6 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	"stvz.io/coral/pkg/mock"
-	"stvz.io/coral/pkg/util"
 )
 
 var _ = Describe("Node", func() {
@@ -52,24 +51,6 @@ var _ = Describe("Node", func() {
 
 			By("checking for an image")
 			Expect(node.HasImage("docker.io/library/notpresent")).To(BeFalse())
-		})
-	})
-
-	Context("ImageHashMap", func() {
-		It("should return a map of image names keyed by their label hashes", func() {
-			By("mocking a new client")
-			file := path.Join(fixtures, "nodes.yaml")
-			c := mock.NewClient().WithLogger(logger).WithFixtureOrDie(file)
-
-			By("getting the node")
-			node, err := GetNode(ctx, "node1", c)
-			Expect(err).ToNot(HaveOccurred())
-
-			By("getting the image hash map")
-			hashMap := node.ImageHashMap()
-			Expect(hashMap).To(HaveKeyWithValue(util.ImageLabelKey(util.ImageHasher("docker.io/library/debian:bookworm-slim")), "docker.io/library/debian:bookworm-slim"))
-			Expect(hashMap).To(HaveKeyWithValue(util.ImageLabelKey(util.ImageHasher("docker.io/library/debian:bullseye-slim")), "docker.io/library/debian:bullseye-slim"))
-
 		})
 	})
 

@@ -12,7 +12,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
 	"stvz.io/coral/pkg/mock"
-	"stvz.io/coral/pkg/util"
 )
 
 var _ = Describe("Controller", func() {
@@ -110,8 +109,8 @@ var _ = Describe("Controller", func() {
 
 			By("adding the image labels to the nodes")
 			labels := map[string]string{
-				util.HashedImageLabelKey("docker.io/library/debian:bookworm-slim"): "available",
-				util.HashedImageLabelKey("docker.io/library/debian:bullseye-slim"): "available",
+				stvziov1.HashedImageLabelKey("docker.io/library/debian:bookworm-slim"): "available",
+				stvziov1.HashedImageLabelKey("docker.io/library/debian:bullseye-slim"): "available",
 			}
 
 			var node1 = &corev1.Node{}
