@@ -1,21 +1,20 @@
 # Notes
 
 ## CURRENT
+* Create a new type called RegistryMirror.  The registry mirror will work similarly to the agent workers
+where a sync group will pull from external repositories into a local repository.
 * Deploy to dockerhub.
-* Comments and license headers.
+* Comments.
+* Finish and polish the README and other docs.
 * Package manifests and install docs.
-* Ensure that we have sane defaults set for the agent.
-* Once-over for webhooks to make sure I'm getting everything.
-* Clean up unused fields in Image
+* Move TODO items into github issues.
+* Delete the TODO file ;)
 
 ## MVP
-* Create a new type called RegistryMirror.  The registry mirror will work similarly to the agent workers
-where a sync group will pull from external repositories into a local repository.  We'll need to use the 
-* Move TODO items into github issues.
-* Finish and polish the README and other docs.
+* Ready after current
 
 ## BUGS
-* Agent loop will place new events for in-progress pu
+* NA
 
 ## LATER
 * Better monitor with dedicated workers instead of a single process per image.
@@ -30,8 +29,3 @@ where a sync group will pull from external repositories into a local repository.
 * Set up docs page in netlify.
 * Container build service and uploads to internal (and potentially external) registries.  The object is to keep things local thereby negating the need to pay for private external registries.  The container build service should be relatively simple in that it just creates jobs with user provided build containers.  We can provide a base container with some standard build/deploy tools.
 * Block while pulling and removing or be smart about pushing additional pull events on to the queue if we are already pulling.  The runtime handles duplicate requests, but it just seems wasteful to push them over and over.
-
-## AGENT NOTES
-* Just a note that the sock location must be homogeneous across all nodes.
-* Lock down the pod through RBAC policies, use a scratch image with no extra items.
-Note: You can copy over /etc/ssl into the scratch image and it should work.  So use a build stage to add certs to a debian/ubuntu image, then copy.

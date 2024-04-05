@@ -3,6 +3,7 @@ CONTROLLER_TOOLS_VERSION ?= v0.14.0
 ENVTEST_VERSION ?= latest
 GOLANGCI_LINT_VERSION ?= v1.57.2
 KUSTOMIZE_VERSION ?= latest
+ADDLICENSE_VERSION ?= v1.0.0
 
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
@@ -14,6 +15,7 @@ KUBECTL ?= kubectl
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
+ADDLICENSE = $(LOCALBIN)/addlicense
 
 LOCALBIN ?= $(shell pwd)/bin
 $(LOCALBIN):
@@ -83,6 +85,10 @@ lint: golangci-lint
 lint-fix: golangci-lint
 	@$(GOLANGCI_LINT) run --fix
 
+.PHONY: license
+license: addlicense
+	@find . -name '*.go' | xargs $(ADDLICENSE) -c "Coral Authors" -y 2024 -l apache
+
 .PHONY: clean
 clean: depsclean
 	@-kubectl delete -k config/overlays/$(ENV)
@@ -92,7 +98,7 @@ clean: depsclean
 ### Individual dep installs were copied out of kubebuilder testdata makefiles.
 ###
 .PHONY: deps
-deps: controller-gen kustomize golangci-lint
+deps: controller-gen kustomize golangci-lint addlicense
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN)
@@ -114,6 +120,11 @@ $(ENVTEST): $(LOCALBIN)
 golangci-lint: $(GOLANGCI_LINT)
 $(GOLANGCI_LINT): $(LOCALBIN)
 	@GOBIN=$(LOCALBIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
+
+.PHONY: addlicense
+addlicense: $(ADDLICENSE)
+$(ADDLICENSE): $(LOCALBIN)
+	@GOBIN=$(LOCALBIN) go install github.com/google/addlicense@$(ADDLICENSE_VERSION)
 
 .PHONY: depsclean
 depsclean:
