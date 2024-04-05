@@ -50,10 +50,11 @@ func (w *Worker) process(ctx context.Context, event *Event, sem *Semaphore) {
 	defer sem.Release(event.Image)
 
 	if !do {
-		w.log.V(10).Info("failed to aquire semaphore, skipping", "image", event.Image)
+		w.log.V(10).Info("failed to acquire semaphore, skipping", "image", event.Image)
 		return
 	}
 
+	// nolint: gocritic
 	switch event.Operation {
 	case Pull:
 		w.log.V(10).Info("pulling image", "image", event.Image)

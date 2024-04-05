@@ -5,7 +5,6 @@ metadata:
   namespace: default
   finalizers: []
 spec:
-  enabled: true
   images:
     - name: docker.io/library/debian
       tags:

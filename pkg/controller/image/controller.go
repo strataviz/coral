@@ -80,7 +80,7 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 		if !has {
 			logger.V(8).Info("adding finalizer and monitor", "finalizer", stvziov1.Finalizer)
 			controllerutil.AddFinalizer(observed.image, stvziov1.Finalizer)
-			err := c.Client.Update(ctx, observed.image)
+			err = c.Client.Update(ctx, observed.image)
 			if err != nil {
 				return ctrl.Result{
 					RequeueAfter: 10 * time.Second,
@@ -94,7 +94,7 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 		// how it would react if the cleanup failed or the controller was restarted.
 		if controllerutil.ContainsFinalizer(observed.image, stvziov1.Finalizer) {
 			logger.V(8).Info("waiting for nodes to remove the images, shutting down monitor, and removing finalizer", "finalizer", stvziov1.Finalizer)
-			err := c.finish(ctx, observed.image)
+			err = c.finish(ctx, observed.image)
 			if err != nil && err.Error() == ErrNodesNotEmpty.Error() {
 				logger.V(6).Info("nodes still have images, waiting for cleanup")
 				return ctrl.Result{

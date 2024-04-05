@@ -1,7 +1,7 @@
 ENV ?= "dev"
 CONTROLLER_TOOLS_VERSION ?= v0.14.0
 ENVTEST_VERSION ?= latest
-GOLANGCI_LINT_VERSION ?= v1.54.2
+GOLANGCI_LINT_VERSION ?= v1.57.2
 KUSTOMIZE_VERSION ?= latest
 
 GOOS := $(shell go env GOOS)
@@ -93,7 +93,7 @@ clean: depsclean
 ### Individual dep installs were copied out of kubebuilder testdata makefiles.
 ###
 .PHONY: deps
-deps: controller-gen kustomize envtest golangci-lint
+deps: controller-gen kustomize golangci-lint
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN)

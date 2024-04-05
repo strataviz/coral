@@ -135,7 +135,6 @@ func (a *Agent) process(ctx context.Context, eq EventQueue, sem *Semaphore, node
 	// activated, the controller will keep new resources off of the node and should
 	// trigger cleanup of the image once the pod is removed.
 	for name, state := range state {
-
 		auth, ok := authMap[name]
 		if !ok {
 			a.log.Error(nil, "server error, auth not found for image", "name", name)

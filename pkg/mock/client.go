@@ -31,7 +31,11 @@ func NewClient() *Client {
 	_ = stvziov1.AddToScheme(s)
 
 	tracker := testing.NewObjectTracker(s, scheme.Codecs.UniversalDecoder())
-	client := fake.NewClientBuilder().WithObjectTracker(tracker).WithScheme(s).Build()
+	client := fake.NewClientBuilder().
+		WithObjectTracker(tracker).
+		WithScheme(s).
+		WithStatusSubresource(&stvziov1.Image{}).
+		Build()
 
 	return &Client{
 		log:     logr.Discard(),
