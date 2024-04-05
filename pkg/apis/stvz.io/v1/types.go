@@ -70,10 +70,9 @@ type ImageSpec struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Namespaced,shortName=img,singular=images
 // +kubebuilder:printcolumn:name="Images",type="integer",JSONPath=".status.totalImages",description="The number of total images managed by the object"
-// +kubebuilder:printcolumn:name="Available",type="integer",JSONPath=".status.availableImages",description="The number of images that are currently available on the nodes"
-// +kubebuilder:printcolumn:name="Pending",type="integer",JSONPath=".status.pendingImages",description="The number of images that are currently pending on the nodes"
-// +kubebuilder:printcolumn:name="Deleting",type="integer",JSONPath=".status.deletingImages",description="The number of images that are currently pending deletion on the nodes"
-// +kubebuilder:printcolumn:name="Unknown",type="integer",JSONPath=".status.unknownImages",description="The number of images that are in an unknown state on the nodes",priority=1
+// +kubebuilder:printcolumn:name="Available",type="integer",JSONPath=".status.condition.available",description="The number of images that are currently available on the nodes"
+// +kubebuilder:printcolumn:name="Pending",type="integer",JSONPath=".status.condition.pending",description="The number of images that are currently pending on the nodes"
+// +kubebuilder:printcolumn:name="Unknown",type="integer",JSONPath=".status.condition.unknown",description="The number of images that are in an unknown state on the nodes",priority=1
 // +kubebuilder:printcolumn:name="Nodes",type="integer",JSONPath=".status.totalNodes",description="The number of nodes matching the selector (if any)",priority=1
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
@@ -99,7 +98,6 @@ type ImageState string
 const (
 	ImageStatePending   ImageState = "pending"
 	ImageStateAvailable ImageState = "available"
-	ImageStateDeleting  ImageState = "deleting"
 	ImageStateUnknown   ImageState = "unknown"
 )
 
@@ -107,17 +105,25 @@ func (i ImageState) String() string {
 	return string(i)
 }
 
-func ImageStateFromString(i string) ImageState {
-	switch i {
-	case "available":
-		return ImageStateAvailable
-	case "pending":
-		return ImageStatePending
-	case "deleting":
-		return ImageStateDeleting
-	default:
-		return ImageStateUnknown
-	}
+type ImageData struct {
+	// +required
+	// Name is the name of the image in NAME:TAG format.
+	Name string `json:"name"`
+	// +required
+	// Label is the label that is used to track the image on the node.
+	Label string `json:"label"`
+}
+
+type ImageCondition struct {
+	// +required
+	// Available is the number of images that are currently available on the nodes.
+	Available int `json:"available"`
+	// +required
+	// Pending is the number of images that are currently pending on the nodes.
+	Pending int `json:"pending"`
+	// +required
+	// Unknown is the number of images that are in an unknown state on the nodes.
+	Unknown int `json:"unknown"`
 }
 
 // WatchStatus is the status for a WatchSet resource.
@@ -129,15 +135,9 @@ type ImageStatus struct {
 	// TotalImages is the number of total images managed by the object.
 	TotalImages int `json:"totalImages"`
 	// +optional
-	// AvailableImages is the number of images that are currently available on the nodes.
-	AvailableImages int `json:"availableImages"`
+	// Condition is the current state of the images on the nodes.
+	Condition ImageCondition `json:"condition"`
 	// +optional
-	// PendingImages is the number of images that are currently pending on the nodes.
-	PendingImages int `json:"pendingImages"`
-	// +optional
-	// DeletingImages is the number of images that are currently pending deletion on the nodes.
-	DeletingImages int `json:"deletingImages"`
-	// +optional
-	// UnknownImages is the number of images that are in an unknown state on the nodes.
-	UnknownImages int `json:"unknownImages"`
+	// Data is a list of image data that will be used to track the images on the nodes.
+	Data []ImageData `json:"data"`
 }

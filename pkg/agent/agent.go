@@ -9,7 +9,6 @@ import (
 	runtime "k8s.io/cri-api/pkg/apis/runtime/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
-	cutil "stvz.io/coral/pkg/util"
 )
 
 const (
@@ -31,11 +30,9 @@ type AgentOptions struct {
 }
 
 type Agent struct {
-	log logr.Logger
-
+	log     logr.Logger
 	options *AgentOptions
-
-	client client.Client
+	client  client.Client
 }
 
 func NewAgent(options *AgentOptions) *Agent {
@@ -48,6 +45,7 @@ func NewAgent(options *AgentOptions) *Agent {
 
 func (a *Agent) Start(ctx context.Context) {
 	wg := &sync.WaitGroup{}
+	sem := NewSemaphore()
 
 	// Start the process workers.
 	eq := NewEventQueue()
@@ -56,12 +54,12 @@ func (a *Agent) Start(ctx context.Context) {
 		worker := NewWorker(i, a.options)
 		go func(worker *Worker) {
 			defer wg.Done()
-			worker.Start(ctx, eq)
+			worker.Start(ctx, eq, sem)
 		}(worker)
 	}
 
 	// TODO: pull logging out of the function and return descriptive errors.
-	err := a.intervalRun(ctx, eq)
+	err := a.intervalRun(ctx, eq, sem)
 	if err != nil {
 		a.log.Error(err, "run failed")
 	}
@@ -75,14 +73,14 @@ func (a *Agent) Start(ctx context.Context) {
 			wg.Wait()
 			return
 		case <-timer.C:
-			if err := a.intervalRun(ctx, eq); err != nil {
+			if err := a.intervalRun(ctx, eq, sem); err != nil {
 				a.log.Error(err, "interval run failed")
 			}
 		}
 	}
 }
 
-func (a *Agent) intervalRun(ctx context.Context, eq EventQueue) error {
+func (a *Agent) intervalRun(ctx context.Context, eq EventQueue, sem *Semaphore) error {
 	// Get the node labels.
 	node, err := GetNode(ctx, a.options.NodeName, a.client)
 	if err != nil {
@@ -90,7 +88,7 @@ func (a *Agent) intervalRun(ctx context.Context, eq EventQueue) error {
 		return err
 	}
 
-	err = a.processImages(ctx, eq, node)
+	err = a.process(ctx, eq, sem, node)
 	if err != nil {
 		return err
 	}
@@ -98,7 +96,8 @@ func (a *Agent) intervalRun(ctx context.Context, eq EventQueue) error {
 	return nil
 }
 
-func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) error { // nolint:funlen
+func (a *Agent) process(ctx context.Context, eq EventQueue, sem *Semaphore, node *Node) error { // nolint:funlen
+	a.log.V(8).Info("processing images", "node", node.GetName())
 	// Get all the matched images from the cache.
 	images, err := ListImages(ctx, a.client, a.options.Namespace, node.GetLabels())
 	if err != nil {
@@ -106,51 +105,23 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 		return err
 	}
 
-	// TODO: I don't like this all that much, so I'll probably refactor it later, but it's
-	// better than before.
 	managedImages := make(map[string]string)
 	authMap := make(map[string][]*runtime.AuthConfig)
 
 	for _, image := range images {
-		for _, img := range image.Spec.Images {
-			for _, tag := range img.Tags {
-				name := *img.Name + ":" + tag
-				managedImages[cutil.HashedImageLabelKey(name)] = name
-				authMap[name] = image.RuntimeAuthLookup(name)
-			}
+		for _, data := range image.Status.Data {
+			managedImages[data.Name] = data.Label
+			authMap[data.Name] = image.RuntimeAuthLookup(data.Name)
 		}
 	}
 
-	// TODO:  I'd like to get to a place where I'm keying by the name and not the
-	// label hash to make things a bit more clean.  The problem is that I'd need to
-	// convert the hashes from the labels to get the current node state.
-
-	// If the image is in the list of managed images then we check available or not.
-	// if not available, then it's pending and if is available then it's available.
-	// if the image is not in the list of managed images and it's available, then we
-	// then it's deleting.  The one thing that we do need though is the labels as that
-	// is kind of how we track history.  On the other hand, could we introduce a new
-	// history object that we could use to track the history of the image on the node
-	// and not have to worry about the labels...  It feels like that could be a more
-	// reliable way to track the images.  The monitor would be the thing that would
-	// need to update the global state (pending/etc) and the worker wouldn't be relying
-	// on it for state at all.  That introduces problems though as you'd need to maintain
-	// a pretty large history of the images on the node or you only keep the current
-	// active ones.
-
-	// Benefits:
-	// - track both the hashes and the names in one spot.
-	// - track the history of the images on the node (in mvp just the current active).
-	// - if tracking deletion, then the fininalizer would just update the status.
-	// - only one object to load and update.
-
-	nodeImages, err := ImageHashMap(ctx, a.options.ImageServiceClient)
+	// I think the ImageMap should replace GetNodeImages.
+	nodeImages, err := ImageMap(ctx, a.options.ImageServiceClient)
 	if err != nil {
 		return err
 	}
-	nodeLabels := node.GetLabels()
 
-	state := UpdateStateLabels(nodeLabels, nodeImages, managedImages)
+	state := UpdateState(nodeImages, managedImages)
 	labels := ReplaceImageLabels(node.GetLabels(), state)
 	err = node.UpdateLabels(ctx, a.client, labels)
 	if err != nil {
@@ -158,34 +129,22 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 		return err
 	}
 
-	// TODO: Once the workers pick up an event that leaves the queue empty so the
-	// loop will try to push on the same event again and then block until processed.
-	// I'm not sure if this is the best way to handle this, but it's mostly just an
-	// annoyance at this point.  I'll need to address this at some point.
-	for hash, state := range state {
-		name, ok := managedImages[hash]
-		// TODO: fix me, we want to be removing in the switch...
-		if !ok {
-			// Get the name from the available images.
-			name, ok = nodeImages[hash]
-			if !ok {
-				a.log.Error(nil, "server error, image not found", "hash", hash)
-				agentError.WithLabelValues(name, "image_not_found").Inc()
-				continue
-			}
-			a.log.V(8).Info("sending remove event", "name", name)
-			agentImageRemovals.Inc()
-			eq <- &Event{
-				Operation: Remove,
-				Image:     name,
-			}
-			continue
-		}
+	// NOTE:
+	// Originally I had deletion in here, but it may be better behavior to leave
+	// the image be and let the kubelet GC it naturally.  If the injector has been
+	// activated, the controller will keep new resources off of the node and should
+	// trigger cleanup of the image once the pod is removed.
+	for name, state := range state {
 
 		auth, ok := authMap[name]
 		if !ok {
 			a.log.Error(nil, "server error, auth not found for image", "name", name)
-			agentError.WithLabelValues(name, "auth_not_found").Inc()
+			agentError.WithLabelValues("auth_not_found").Inc()
+			continue
+		}
+
+		if sem.Acquired(name) {
+			a.log.V(10).Info("image is already being processed, skipping", "image", name)
 			continue
 		}
 
@@ -198,15 +157,8 @@ func (a *Agent) processImages(ctx context.Context, eq EventQueue, node *Node) er
 				Image:     name,
 				Auth:      auth,
 			}
-		case string(stvziov1.ImageStateDeleting):
-			a.log.V(8).Info("sending remove event", "name", name)
-			agentImageRemovals.Inc()
-			eq <- &Event{
-				Operation: Remove,
-				Image:     name,
-			}
 		case string(stvziov1.ImageStateAvailable):
-			a.log.V(10).Info("image is available, skipping", "name", name)
+			a.log.V(8).Info("image is available, skipping", "name", name)
 		}
 	}
 

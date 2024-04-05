@@ -38,13 +38,22 @@ func NewWorker(id int, options *AgentOptions) *Worker {
 	}
 }
 
-func (w *Worker) Start(ctx context.Context, eq <-chan *Event) {
+func (w *Worker) Start(ctx context.Context, eq <-chan *Event, sem *Semaphore) {
 	for event := range eq {
-		w.process(ctx, event)
+		w.process(ctx, event, sem)
 	}
 }
 
-func (w *Worker) process(ctx context.Context, event *Event) {
+func (w *Worker) process(ctx context.Context, event *Event, sem *Semaphore) {
+	// Make sure we only have one worker operating on an image at a time.
+	do := sem.Acquire(event.Image)
+	defer sem.Release(event.Image)
+
+	if !do {
+		w.log.V(10).Info("failed to aquire semaphore, skipping", "image", event.Image)
+		return
+	}
+
 	switch event.Operation {
 	case Pull:
 		w.log.V(10).Info("pulling image", "image", event.Image)
@@ -53,13 +62,6 @@ func (w *Worker) process(ctx context.Context, event *Event) {
 			w.log.Error(err, "failed to pull image", "image", event.Image)
 		}
 		w.log.V(8).Info("image pulled", "image", event.Image)
-	case Remove:
-		w.log.V(10).Info("removing image", "image", event.Image)
-		err := w.remove(ctx, event)
-		if err != nil {
-			w.log.Error(err, "failed to remove image", "image", event.Image)
-		}
-		w.log.V(8).Info("image removed", "image", event.Image)
 	}
 }
 
@@ -95,20 +97,6 @@ func (w *Worker) pull(ctx context.Context, event *Event) error {
 	}
 
 	return nil
-}
-
-func (w *Worker) remove(ctx context.Context, event *Event) error {
-	_, err := w.ims.RemoveImage(ctx, &runtime.RemoveImageRequest{
-		Image: &runtime.ImageSpec{
-			Image: event.Image,
-		},
-	})
-	if err != nil {
-		// Non-fatal. Ignore these errors for now to prevent the cleaner from stopping.
-		w.log.Error(err, "failed to remove image", "name", event.Image)
-	}
-
-	return w.waitImage(ctx, event.Image, false)
 }
 
 func (w *Worker) pullImage(ctx context.Context, image string, auth *runtime.AuthConfig) error {

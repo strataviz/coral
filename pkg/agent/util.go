@@ -23,7 +23,7 @@ func GetImageIdentifiers(ctx context.Context, ims runtime.ImageServiceClient) (m
 	return ids, nil
 }
 
-func ImageHashMap(ctx context.Context, ims runtime.ImageServiceClient) (map[string]string, error) {
+func ImageMap(ctx context.Context, ims runtime.ImageServiceClient) (map[string]string, error) {
 	resp, err := ims.ListImages(ctx, &runtime.ListImagesRequest{})
 	if err != nil {
 		return nil, err
@@ -32,8 +32,7 @@ func ImageHashMap(ctx context.Context, ims runtime.ImageServiceClient) (map[stri
 	tags := make(map[string]string)
 	for _, img := range resp.Images {
 		for _, tag := range img.RepoTags {
-			key := util.HashedImageLabelKey(tag)
-			tags[key] = tag
+			tags[tag] = util.HashedImageLabelKey(tag)
 		}
 	}
 

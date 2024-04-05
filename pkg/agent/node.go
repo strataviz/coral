@@ -89,6 +89,7 @@ func (n *Node) getImages() {
 	images := make(map[string]string)
 	for _, image := range n.Status.Images {
 		for _, name := range image.Names {
+			// TODO: update the util method.
 			images[name] = util.ImageLabelKey(util.ImageHasher(name))
 		}
 	}

@@ -2,7 +2,6 @@ package monitor
 
 import (
 	"context"
-	"fmt"
 	"math"
 
 	"github.com/go-logr/logr"
@@ -11,9 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
-	"stvz.io/coral/pkg/util"
 )
 
 type Worker struct {
@@ -54,10 +51,9 @@ func (m *Worker) run(ctx context.Context, nns types.NamespacedName) {
 		return
 	}
 
-	// There is a race where the creation of the finalizer can occur after
-	// we get the image.  If the finalizer isn't present, it hasn't been
-	// through the reconcile loop yet and we'll skip updating the status.
-	if !controllerutil.ContainsFinalizer(image, stvziov1.Finalizer) {
+	// If we don't have any of the image data yet, just return.  The object
+	// hasn't been fully reconciled yet.
+	if len(image.Status.Data) == 0 {
 		return
 	}
 
@@ -111,20 +107,16 @@ func (m *Worker) updateStates(ctx context.Context, image *stvziov1.Image) (*stvz
 	// Calculate the hashes for the images.
 	keys := make([][]string, 0)
 	total := 0
-	for _, img := range image.Spec.Images {
-		for _, tag := range img.Tags {
-			name := fmt.Sprintf("%s:%s", *img.Name, tag)
-			label := util.HashedImageLabelKey(name)
-			keys = append(keys, []string{name, label})
-			total++
-		}
+
+	for _, data := range image.Status.Data {
+		keys = append(keys, []string{data.Name, data.Label})
+		total++
 	}
 
 	// Filter managed labels and count the states.
 	state := map[string]int{
 		"pending":   0,
 		"available": 0,
-		"deleting":  0,
 		"unknown":   0,
 	}
 
@@ -140,15 +132,20 @@ func (m *Worker) updateStates(ctx context.Context, image *stvziov1.Image) (*stvz
 	}
 
 	img := image.DeepCopy()
-	img.Status.AvailableImages = floor(state["available"], numNodes)
-	monitorImagesAvailable.WithLabelValues(image.Name, image.Namespace).Set(float64(state["available"]))
-	img.Status.PendingImages = floor(state["pending"], numNodes)
-	monitorImagesPending.WithLabelValues(image.Name, image.Namespace).Set(float64(state["pending"]))
-	img.Status.DeletingImages = floor(state["deleting"], numNodes)
-	monitorImagesDeleting.WithLabelValues(image.Name, image.Namespace).Set(float64(state["deleting"]))
-	img.Status.UnknownImages = floor(state["unknown"], numNodes)
+
+	condition := stvziov1.ImageCondition{
+		Available: floor(state["available"], numNodes),
+		Pending:   floor(state["pending"], numNodes),
+		Unknown:   floor(state["unknown"], numNodes),
+	}
+
+	img.Status.Condition = condition
 	img.Status.TotalImages = total
 	img.Status.TotalNodes = numNodes
+
+	monitorImagesAvailable.WithLabelValues(image.Name, image.Namespace).Set(float64(state["available"]))
+	monitorImagesPending.WithLabelValues(image.Name, image.Namespace).Set(float64(state["pending"]))
+	monitorImagesUnknown.WithLabelValues(image.Name, image.Namespace).Set(float64(state["unknown"]))
 
 	return img, nil
 }
@@ -156,52 +153,3 @@ func (m *Worker) updateStates(ctx context.Context, image *stvziov1.Image) (*stvz
 func floor(a, b int) int {
 	return int(math.Floor(float64(a) / float64(b)))
 }
-
-// Get filter the labels to those that the image is managing.
-// Make a
-
-// for _, image := range images {
-// 	for _, tag := range image.Tags {
-// 		hash := util.ImageHasher(fmt.Sprintf("%s:%s", *image.Name, tag))
-// 		label := util.ImageLabelKey(hash)
-// 		req, err := labels.NewRequirement(label, selection.Equals, []string{state})
-// 		if err != nil {
-// 			m.log.Error(err, "failed to create requirement")
-// 			return -1, err
-// 		}
-// 		selectors = selectors.Add(*req)
-
-// 		nodes := new(corev1.NodeList)
-// 		err = m.client.List(ctx, nodes, &client.ListOptions{
-// 			LabelSelector: selectors,
-// 		})
-// 		if err != nil {
-// 			return -1, err
-// 		}
-// 	}
-// }
-
-// return len(nodes.Items), nil
-// }
-
-// func (m *Worker) addStateRequirement(s labels.Selector, label string, state string) (labels.Selector, error) {
-// 	s = s.DeepCopySelector()
-// 	req, err := labels.NewRequirement(label, selection.Equals, []string{state})
-// 	if err != nil {
-// 		m.log.Error(err, "failed to create requirement")
-// 		return nil, err
-// 	}
-// 	return s.Add(*req), nil
-// }
-
-// getNodes returns the nodes that match the selector.
-// func (m *Worker) getNodes(ctx context.Context, selector labels.Selector) (*corev1.NodeList, error) {
-// 	nodes := new(corev1.NodeList)
-// 	err := m.cache.List(ctx, nodes, &client.ListOptions{
-// 		LabelSelector: selector,
-// 	})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return nodes, nil
-// }

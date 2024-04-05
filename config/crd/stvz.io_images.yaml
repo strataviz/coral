@@ -22,20 +22,15 @@ spec:
       name: Images
       type: integer
     - description: The number of images that are currently available on the nodes
-      jsonPath: .status.availableImages
+      jsonPath: .status.condition.available
       name: Available
       type: integer
     - description: The number of images that are currently pending on the nodes
-      jsonPath: .status.pendingImages
+      jsonPath: .status.condition.pending
       name: Pending
       type: integer
-    - description: The number of images that are currently pending deletion on the
-        nodes
-      jsonPath: .status.deletingImages
-      name: Deleting
-      type: integer
     - description: The number of images that are in an unknown state on the nodes
-      jsonPath: .status.unknownImages
+      jsonPath: .status.condition.unknown
       name: Unknown
       priority: 1
       type: integer
@@ -109,17 +104,34 @@ spec:
             type: object
           status:
             properties:
-              availableImages:
-                type: integer
-              deletingImages:
-                type: integer
-              pendingImages:
-                type: integer
+              condition:
+                properties:
+                  available:
+                    type: integer
+                  pending:
+                    type: integer
+                  unknown:
+                    type: integer
+                required:
+                - available
+                - pending
+                - unknown
+                type: object
+              data:
+                items:
+                  properties:
+                    label:
+                      type: string
+                    name:
+                      type: string
+                  required:
+                  - label
+                  - name
+                  type: object
+                type: array
               totalImages:
                 type: integer
               totalNodes:
-                type: integer
-              unknownImages:
                 type: integer
             type: object
         required:

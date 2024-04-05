@@ -109,6 +109,14 @@ func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resul
 		return ctrl.Result{}, nil
 	}
 
+	observed.image.Status.Data = observed.image.GetStatusData()
+	err = c.Client.Status().Update(ctx, observed.image)
+	if err != nil {
+		return ctrl.Result{
+			RequeueAfter: 10 * time.Second,
+		}, err
+	}
+
 	return ctrl.Result{}, nil
 }
 
