@@ -1,3 +1,17 @@
+// Copyright 2024 Coral Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package cmd
 
 import (
@@ -38,6 +52,7 @@ const (
 
 type Agent struct {
 	logLevel       int8
+	parallel       int
 	containerdAddr string
 	pollInterval   time.Duration
 	namespace      string
@@ -100,7 +115,7 @@ func (a *Agent) RunE(cmd *cobra.Command, args []string) error {
 
 	options := &agent.AgentOptions{
 		Log:                  log,
-		WorkerProcesses:      1,
+		WorkerProcesses:      a.parallel,
 		Namespace:            a.namespace,
 		PollInterval:         a.pollInterval,
 		ImageServiceClient:   ims,
@@ -127,6 +142,7 @@ func (w *Agent) Command() *cobra.Command {
 	cmd.PersistentFlags().DurationVarP(&w.pollInterval, "poll-interval", "i", DefaultPollInterval, "set the puller poll interval")
 	cmd.PersistentFlags().StringVarP(&w.containerdAddr, "containerd-addr", "A", DefaultContainerdAddr, "set the containerd address")
 	cmd.PersistentFlags().StringVarP(&w.namespace, "namespace", "n", DefaultNamespace, "limit the coral agent to images in a specific namespace")
+	cmd.PersistentFlags().IntVarP(&w.parallel, "parallel", "p", DefaultParallel, "set the number of parallel workers")
 	return cmd
 }
 
