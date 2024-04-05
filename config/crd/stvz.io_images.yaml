@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.13.0
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: images.stvz.io
 spec:
   group: stvz.io
@@ -22,20 +22,15 @@ spec:
       name: Images
       type: integer
     - description: The number of images that are currently available on the nodes
-      jsonPath: .status.availableImages
+      jsonPath: .status.condition.available
       name: Available
       type: integer
     - description: The number of images that are currently pending on the nodes
-      jsonPath: .status.pendingImages
+      jsonPath: .status.condition.pending
       name: Pending
       type: integer
-    - description: The number of images that are currently pending deletion on the
-        nodes
-      jsonPath: .status.deletingImages
-      name: Deleting
-      type: integer
     - description: The number of images that are in an unknown state on the nodes
-      jsonPath: .status.unknownImages
+      jsonPath: .status.condition.unknown
       name: Unknown
       priority: 1
       type: integer
@@ -59,8 +54,6 @@ spec:
             type: object
           spec:
             properties:
-              enabled:
-                type: boolean
               imagePullSecrets:
                 items:
                   properties:
@@ -85,9 +78,9 @@ spec:
                   - name
                   - tags
                   type: object
+                maxItems: 100
+                minItems: 1
                 type: array
-              pollInterval:
-                type: string
               selector:
                 items:
                   properties:
@@ -106,20 +99,39 @@ spec:
                   type: object
                 nullable: true
                 type: array
+            required:
+            - images
             type: object
           status:
             properties:
-              availableImages:
-                type: integer
-              deletingImages:
-                type: integer
-              pendingImages:
-                type: integer
+              condition:
+                properties:
+                  available:
+                    type: integer
+                  pending:
+                    type: integer
+                  unknown:
+                    type: integer
+                required:
+                - available
+                - pending
+                - unknown
+                type: object
+              data:
+                items:
+                  properties:
+                    label:
+                      type: string
+                    name:
+                      type: string
+                  required:
+                  - label
+                  - name
+                  type: object
+                type: array
               totalImages:
                 type: integer
               totalNodes:
-                type: integer
-              unknownImages:
                 type: integer
             type: object
         required:

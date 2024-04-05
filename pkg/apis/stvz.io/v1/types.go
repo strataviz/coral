@@ -23,28 +23,14 @@ import (
 
 // +kubebuilder:docs-gen:collapse=Go imports
 
-type RestartPolicy string
-
 const (
-	// RestartPolicyNever indicates that the resources using an updated image should never be restarted.
-	RestartPolicyNever RestartPolicy = "Never"
-	// RestartPolicyAlways indicates that the resources using an updated image should always be restarted.
-	RestartPolicyAlways RestartPolicy = "Always"
-	// RestartPolicyAnnotation indicates that the resources using an updated image should be restarted if the annotation is present.
-	RestartPolicyAnnotation RestartPolicy = "Annotation"
+	Finalizer = "image.stvz.io/finalizer"
 )
 
 type NodeSelector struct {
 	Key      string             `json:"key"`
 	Operator selection.Operator `json:"operator"`
 	Values   []string           `json:"values"`
-}
-
-type ImageSpecRegistry struct {
-	// +required
-	// URL is the URL of the registry to mirror the image to.  The registry must be accessible from
-	// the daemonsets that run on the nodes, and must also support the docker registry API V2.
-	URL *string `json:"url"`
 }
 
 type ImageSpecImages struct {
@@ -64,19 +50,12 @@ type ImageSpecImages struct {
 // ImageSpec is the spec for a Image resource.
 type ImageSpec struct {
 	// +optional
-	// Enabled indicates whether the image synchronization is enabled.  This defaults to true.
-	Enabled *bool `json:"enabled"`
-	// +optional
 	// +nullable
 	// Selector defines which nodes the image should be synced to.
 	Selector []NodeSelector `json:"selector"`
-	// +optional
-	// PollInterval is the interval to poll the registry for new images.  This defaults to 5 minutes with a 1 minute splay.
-	PollInterval *metav1.Duration `json:"pollInterval"`
-	// +optional
-	// RestartPolicy is the policy to use when the image is updated.  I'm not sure that I want this though.  This defaults to Never.
-	// RestartPolicy *RestartPolicy `json:"restartPolicy"`
 	// +required
+	// +kubebuilder:validation:MinItems=1
+	// +kubebuilder:validation:MaxItems=100
 	Images []ImageSpecImages `json:"images"`
 	// +optional
 	// +nullable
@@ -91,10 +70,9 @@ type ImageSpec struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:scope=Namespaced,shortName=img,singular=images
 // +kubebuilder:printcolumn:name="Images",type="integer",JSONPath=".status.totalImages",description="The number of total images managed by the object"
-// +kubebuilder:printcolumn:name="Available",type="integer",JSONPath=".status.availableImages",description="The number of images that are currently available on the nodes"
-// +kubebuilder:printcolumn:name="Pending",type="integer",JSONPath=".status.pendingImages",description="The number of images that are currently pending on the nodes"
-// +kubebuilder:printcolumn:name="Deleting",type="integer",JSONPath=".status.deletingImages",description="The number of images that are currently pending deletion on the nodes"
-// +kubebuilder:printcolumn:name="Unknown",type="integer",JSONPath=".status.unknownImages",description="The number of images that are in an unknown state on the nodes",priority=1
+// +kubebuilder:printcolumn:name="Available",type="integer",JSONPath=".status.condition.available",description="The number of images that are currently available on the nodes"
+// +kubebuilder:printcolumn:name="Pending",type="integer",JSONPath=".status.condition.pending",description="The number of images that are currently pending on the nodes"
+// +kubebuilder:printcolumn:name="Unknown",type="integer",JSONPath=".status.condition.unknown",description="The number of images that are in an unknown state on the nodes",priority=1
 // +kubebuilder:printcolumn:name="Nodes",type="integer",JSONPath=".status.totalNodes",description="The number of nodes matching the selector (if any)",priority=1
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
@@ -120,7 +98,6 @@ type ImageState string
 const (
 	ImageStatePending   ImageState = "pending"
 	ImageStateAvailable ImageState = "available"
-	ImageStateDeleting  ImageState = "deleting"
 	ImageStateUnknown   ImageState = "unknown"
 )
 
@@ -128,17 +105,25 @@ func (i ImageState) String() string {
 	return string(i)
 }
 
-func ImageStateFromString(i string) ImageState {
-	switch i {
-	case "available":
-		return ImageStateAvailable
-	case "pending":
-		return ImageStatePending
-	case "deleting":
-		return ImageStateDeleting
-	default:
-		return ImageStateUnknown
-	}
+type ImageData struct {
+	// +required
+	// Name is the name of the image in NAME:TAG format.
+	Name string `json:"name"`
+	// +required
+	// Label is the label that is used to track the image on the node.
+	Label string `json:"label"`
+}
+
+type ImageCondition struct {
+	// +required
+	// Available is the number of images that are currently available on the nodes.
+	Available int `json:"available"`
+	// +required
+	// Pending is the number of images that are currently pending on the nodes.
+	Pending int `json:"pending"`
+	// +required
+	// Unknown is the number of images that are in an unknown state on the nodes.
+	Unknown int `json:"unknown"`
 }
 
 // WatchStatus is the status for a WatchSet resource.
@@ -150,15 +135,9 @@ type ImageStatus struct {
 	// TotalImages is the number of total images managed by the object.
 	TotalImages int `json:"totalImages"`
 	// +optional
-	// AvailableImages is the number of images that are currently available on the nodes.
-	AvailableImages int `json:"availableImages"`
+	// Condition is the current state of the images on the nodes.
+	Condition ImageCondition `json:"condition"`
 	// +optional
-	// PendingImages is the number of images that are currently pending on the nodes.
-	PendingImages int `json:"pendingImages"`
-	// +optional
-	// DeletingImages is the number of images that are currently pending deletion on the nodes.
-	DeletingImages int `json:"deletingImages"`
-	// +optional
-	// UnknownImages is the number of images that are in an unknown state on the nodes.
-	UnknownImages int `json:"unknownImages"`
+	// Data is a list of image data that will be used to track the images on the nodes.
+	Data []ImageData `json:"data"`
 }

@@ -2,8 +2,11 @@
 
 ## CURRENT
 * Deploy to dockerhub.
+* Comments and license headers.
 * Package manifests and install docs.
 * Ensure that we have sane defaults set for the agent.
+* Once-over for webhooks to make sure I'm getting everything.
+* Clean up unused fields in Image
 
 ## MVP
 * Create a new type called RegistryMirror.  The registry mirror will work similarly to the agent workers
@@ -12,7 +15,7 @@ where a sync group will pull from external repositories into a local repository.
 * Finish and polish the README and other docs.
 
 ## BUGS
-* The reauth on agent pulls seems to be failing back to the main loop instead of finding the auth and then blocking.  It still ends up pulling the image, but takes a couple iterations.
+* NA
 
 ## LATER
 * Better monitor with dedicated workers instead of a single process per image.

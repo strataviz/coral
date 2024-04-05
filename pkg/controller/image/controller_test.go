@@ -34,7 +34,7 @@ var _ = Describe("Controller", func() {
 			By("ensuring the initial object does not have the finalizer")
 			err := c.Get(ctx, nn, image)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(controllerutil.ContainsFinalizer(image, Finalizer)).To(BeFalse())
+			Expect(controllerutil.ContainsFinalizer(image, stvziov1.Finalizer)).To(BeFalse())
 
 			By("creating a new controller")
 			controller := &Controller{
@@ -54,7 +54,7 @@ var _ = Describe("Controller", func() {
 				Name:      "base",
 			}, image)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(image.ObjectMeta.Finalizers).To(ContainElement(Finalizer))
+			Expect(image.ObjectMeta.Finalizers).To(ContainElement(stvziov1.Finalizer))
 		})
 
 		It("should add a monitor for the new object after it has been updated with the finalizer", func() {
@@ -74,7 +74,7 @@ var _ = Describe("Controller", func() {
 			By("ensuring the initial object does not have the finalizer")
 			err := c.Get(ctx, nn, image)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(controllerutil.ContainsFinalizer(image, Finalizer)).To(BeTrue())
+			Expect(controllerutil.ContainsFinalizer(image, stvziov1.Finalizer)).To(BeTrue())
 
 			By("creating a new controller")
 			controller := &Controller{
@@ -106,7 +106,7 @@ var _ = Describe("Controller", func() {
 			By("ensuring the initial object has the finalizer")
 			err := c.Get(ctx, nn, image)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(controllerutil.ContainsFinalizer(image, Finalizer)).To(BeTrue())
+			Expect(controllerutil.ContainsFinalizer(image, stvziov1.Finalizer)).To(BeTrue())
 
 			By("adding the image labels to the nodes")
 			labels := map[string]string{
@@ -158,7 +158,7 @@ var _ = Describe("Controller", func() {
 			err = c.Get(ctx, nn, image)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(image.DeletionTimestamp.IsZero()).To(BeFalse())
-			Expect(controllerutil.ContainsFinalizer(image, Finalizer)).To(BeTrue())
+			Expect(controllerutil.ContainsFinalizer(image, stvziov1.Finalizer)).To(BeTrue())
 
 			By("removing the label from a single node, leaving the other node available")
 			node1.SetLabels(map[string]string{})
@@ -175,7 +175,7 @@ var _ = Describe("Controller", func() {
 			By("checking if the object still has the finalizer while the last node is still labeled")
 			err = c.Get(ctx, nn, image)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(controllerutil.ContainsFinalizer(image, Finalizer)).To(BeTrue())
+			Expect(controllerutil.ContainsFinalizer(image, stvziov1.Finalizer)).To(BeTrue())
 
 			By("removing the label from the final node")
 			node2.SetLabels(map[string]string{})

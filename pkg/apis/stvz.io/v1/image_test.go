@@ -3,6 +3,8 @@ package v1
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
+	"stvz.io/coral/pkg/util"
 )
 
 // +kubebuilder:docs-gen:collapse=Imports
@@ -63,6 +65,35 @@ var _ = Describe("Image functions:", func() {
 				Expect(images[1]).To(Equal("test:tag2"))
 				Expect(images[2]).To(Equal("test:tag3"))
 			})
+		})
+	})
+
+	Context("GetStatusData", func() {
+		It("should return the correct data", func() {
+			image := Image{
+				Spec: ImageSpec{
+					Images: []ImageSpecImages{
+						{
+							Name: &[]string{"docker.io/library/debian"}[0],
+							Tags: []string{"bookworm-slim", "bullseye-slim"},
+						},
+					},
+				},
+			}
+			data := image.GetStatusData()
+			Expect(data).To(HaveLen(2))
+			Expect(data).To(MatchElements(func(element interface{}) string {
+				return element.(ImageData).Name
+			}, IgnoreExtras, Elements{
+				"docker.io/library/debian:bookworm-slim": Equal(ImageData{
+					Name:  "docker.io/library/debian:bookworm-slim",
+					Label: util.HashedImageLabelKey("docker.io/library/debian:bookworm-slim"),
+				}),
+				"docker.io/library/debian:bullseye-slim": Equal(ImageData{
+					Name:  "docker.io/library/debian:bullseye-slim",
+					Label: util.HashedImageLabelKey("docker.io/library/debian:bullseye-slim"),
+				}),
+			}))
 		})
 	})
 })

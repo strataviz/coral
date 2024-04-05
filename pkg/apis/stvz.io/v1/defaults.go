@@ -16,37 +16,12 @@ package v1
 // +kubebuilder:docs-gen:collapse=Apache License
 
 import (
-	"time"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // +kubebuilder:docs-gen:collapse=Go imports
 
-const (
-	DefaultEnabled            bool          = false
-	DefaultRegistry           string        = "docker.io"
-	DefaultPollInterval       time.Duration = 30 * time.Second
-	DefaultManagePullPolicies bool          = true
-)
-
-func defaultedImage(obj *Image) {
-	if obj.Spec.Enabled == nil {
-		obj.Spec.Enabled = new(bool)
-		*obj.Spec.Enabled = DefaultEnabled
-	}
-
-	if obj.Spec.PollInterval == nil {
-		obj.Spec.PollInterval = new(metav1.Duration)
-		*obj.Spec.PollInterval = metav1.Duration{Duration: DefaultPollInterval}
-	}
-
-	if obj.Spec.Enabled == nil {
-		obj.Spec.Enabled = new(bool)
-		*obj.Spec.Enabled = true
-	}
-}
+func defaultedImage(obj *Image) {}
 
 // Defaulted sets the resource defaults.
 func Defaulted(obj client.Object) {

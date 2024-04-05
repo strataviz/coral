@@ -3,8 +3,6 @@ kind: Image
 metadata:
   name: strataviz
 spec:
-  enabled: true
-  pollInterval: 30s
   imagePullSecrets:
     - name: regcred
   images:
