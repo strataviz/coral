@@ -34,6 +34,7 @@ func SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=stvz.io,resources=mirrors/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=stvz.io,resources=mirrors/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
 
 func (c *Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)

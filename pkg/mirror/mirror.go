@@ -176,6 +176,24 @@ func (m *Mirror) informers(ctx context.Context, c cache.Cache) error {
 		Log:         m.log,
 		MirrorCache: m.mirrorCache,
 		Client:      cli,
+		AuthCache:   m.authCache,
+	})
+	if err != nil {
+		return err
+	}
+
+	si, err := c.GetInformerForKind(ctx, schema.GroupVersionKind{
+		Group:   "",
+		Version: "v1",
+		Kind:    "Secret",
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = si.AddEventHandler(&SecretHandler{
+		Log:       m.log,
+		AuthCache: m.authCache,
 	})
 	if err != nil {
 		return err

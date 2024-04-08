@@ -43,6 +43,7 @@ spec:
                       type: string
                   type: object
                   x-kubernetes-map-type: atomic
+                nullable: true
                 type: array
               registry:
                 type: string

@@ -28,6 +28,8 @@ rules:
   - secrets
   verbs:
   - get
+  - list
+  - watch
 - apiGroups:
   - stvz.io
   resources:
