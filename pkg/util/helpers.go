@@ -53,3 +53,21 @@ func FilterMapFunc[S, T comparable](a map[S]T, fn func(S, T) bool) map[S]T {
 
 	return result
 }
+
+func ListDiff(a, b []string) []string {
+	m := make(map[string]bool)
+	for _, item := range a {
+		m[item] = true
+	}
+
+	for _, item := range b {
+		delete(m, item)
+	}
+
+	var result []string
+	for k := range m {
+		result = append(result, k)
+	}
+
+	return result
+}

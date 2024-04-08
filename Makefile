@@ -147,6 +147,11 @@ run:
 	$(eval POD := $(shell kubectl get pods -n coral -l app=coral -o=custom-columns=:metadata.name --no-headers))
 	@$(KUBECTL) exec -n coral -it pod/$(POD) -- bash -c "go run main.go controller --log-level=8 --skip-insecure-verify"
 
+.PHONY: mirror-run
+mirror-run:
+	$(eval POD := $(shell kubectl get pods -n coral -l app=coral -o=custom-columns=:metadata.name --no-headers))
+	@$(KUBECTL) exec -n coral -it pod/$(POD) -- bash -c "go run main.go mirror --log-level=8 --name=$(POD) --namespace=coral --labels=app=coral"
+
 .PHONY: agent-run
 agent-run:
 	@$(KUBECTL) apply -k config/overlays/$(ENV)

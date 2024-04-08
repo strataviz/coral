@@ -20,6 +20,7 @@ import (
 )
 
 const (
+	// TODO: Change me
 	RootUsage     = "coral [COMMAND] [ARG...]"
 	RootShortDesc = "Build controller and image sync tool for kubernetes"
 	RootLongDesc  = `Coral is a build controller and image sync tool for kubernetes.  It
@@ -54,8 +55,8 @@ func (r *Root) Command() *cobra.Command {
 		},
 	}
 
-	rootCmd.PersistentFlags().StringP("kubeconfig", "", "", "path to kubeconfig file")
 	rootCmd.AddCommand(NewController().Command())
 	rootCmd.AddCommand(NewAgent().Command())
+	rootCmd.AddCommand(NewMirror().Command())
 	return rootCmd
 }

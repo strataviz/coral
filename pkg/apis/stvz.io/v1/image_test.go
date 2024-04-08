@@ -29,7 +29,7 @@ var _ = Describe("Image functions:", func() {
 			It("should return no images", func() {
 				image := Image{
 					Spec: ImageSpec{
-						Images: []ImageSpecImages{
+						Repositories: []RepositorySpec{
 							{
 								Name: &[]string{"test"}[0],
 								Tags: []string{},
@@ -46,7 +46,7 @@ var _ = Describe("Image functions:", func() {
 			It("should return images", func() {
 				image := Image{
 					Spec: ImageSpec{
-						Images: []ImageSpecImages{
+						Repositories: []RepositorySpec{
 							{
 								Name: &[]string{"test"}[0],
 								Tags: []string{"tag1"},
@@ -64,7 +64,7 @@ var _ = Describe("Image functions:", func() {
 			It("should return images", func() {
 				image := Image{
 					Spec: ImageSpec{
-						Images: []ImageSpecImages{
+						Repositories: []RepositorySpec{
 							{
 								Name: &[]string{"test"}[0],
 								Tags: []string{"tag1", "tag2", "tag3"},
@@ -85,7 +85,7 @@ var _ = Describe("Image functions:", func() {
 		It("should return the correct data", func() {
 			image := Image{
 				Spec: ImageSpec{
-					Images: []ImageSpecImages{
+					Repositories: []RepositorySpec{
 						{
 							Name: &[]string{"docker.io/library/debian"}[0],
 							Tags: []string{"bookworm-slim", "bullseye-slim"},

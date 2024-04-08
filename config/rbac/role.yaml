@@ -17,6 +17,14 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - secrets
   verbs:
   - get
@@ -42,6 +50,32 @@ rules:
   - stvz.io
   resources:
   - images/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - stvz.io
+  resources:
+  - mirrors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - stvz.io
+  resources:
+  - mirrors/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - stvz.io
+  resources:
+  - mirrors/status
   verbs:
   - get
   - patch

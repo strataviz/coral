@@ -12,16 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package image
+package mirror
 
-import (
-	"testing"
+import "sync"
 
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
-)
+type Semaphore struct {
+	s map[string]bool
+	sync.Mutex
+}
 
-func TestSuite(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Image Injector Suite")
+func NewSemaphore() *Semaphore {
+	return &Semaphore{
+		s: make(map[string]bool),
+	}
+}
+
+func (s *Semaphore) Acquire(key string) bool {
+	s.Lock()
+	defer s.Unlock()
+
+	if _, ok := s.s[key]; ok {
+		return false
+	}
+
+	s.s[key] = true
+	return true
+}
+
+func (s *Semaphore) Release(key string) {
+	s.Lock()
+	defer s.Unlock()
+
+	delete(s.s, key)
+}
+
+func (s *Semaphore) Acquired(key string) bool {
+	s.Lock()
+	defer s.Unlock()
+
+	_, ok := s.s[key]
+	return ok
 }

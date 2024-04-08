@@ -20,8 +20,24 @@ import (
 	"hash"
 	"math/rand" // #nosec
 
+	"github.com/containers/image/v5/transports/alltransports"
 	"k8s.io/apimachinery/pkg/util/dump"
 )
+
+// NormalizeRepoTag converts an image reference into it's fully explicit form.
+func NormalizeRepoTag(r, t string) (string, error) {
+	fq := "docker://" + r
+	if t != "" {
+		fq += ":" + t
+	}
+
+	src, err := alltransports.ParseImageName(fq)
+	if err != nil {
+		return "", err
+	}
+
+	return src.DockerReference().String(), nil
+}
 
 func DeepCopyObject(hasher hash.Hash, obj interface{}) {
 	hasher.Reset()

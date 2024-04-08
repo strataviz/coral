@@ -154,7 +154,7 @@ func (c *Controller) finish(ctx context.Context, image *stvziov1.Image) error {
 	// by another object, then the image would not be deleted and we would be stuck
 	// here forever.  We could potentially get around this by adding a name/namespace
 	// itentifier to the label?  Will revisit this later.
-	for _, i := range image.Spec.Images {
+	for _, i := range image.Spec.Repositories {
 		for _, tag := range i.Tags {
 			tagSelectors := selectors.DeepCopySelector()
 			label := stvziov1.HashedImageLabelKey(*i.Name + ":" + tag)

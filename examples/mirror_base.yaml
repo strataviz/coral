@@ -1,0 +1,11 @@
+apiVersion: stvz.io/v1
+kind: Mirror
+metadata:
+  name: base
+spec:
+  registry: registry.coral.svc.cluster.local:5000
+  repositories:
+    - name: debian
+      tags:
+        - bookworm-slim
+        - bullseye-slim

@@ -33,11 +33,9 @@ var (
 	fixtures = filepath.Join("..", "..", "fixtures", "agent_test")
 )
 
-func TestImageController(t *testing.T) {
+func TestSuite(t *testing.T) {
 	RegisterFailHandler(Fail)
-	suiteConfig, _ := GinkgoConfiguration()
-	suiteConfig.ParallelTotal = 1
-	RunSpecs(t, "Image Controller Suite", suiteConfig)
+	RunSpecs(t, "Image Controller Suite")
 }
 
 var _ = BeforeSuite(func() {

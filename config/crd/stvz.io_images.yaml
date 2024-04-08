@@ -63,9 +63,11 @@ spec:
                   x-kubernetes-map-type: atomic
                 nullable: true
                 type: array
-              images:
+              repositories:
                 items:
                   properties:
+                    listSelection:
+                      type: string
                     name:
                       type: string
                     tags:
@@ -78,8 +80,6 @@ spec:
                   - name
                   - tags
                   type: object
-                maxItems: 100
-                minItems: 1
                 type: array
               selector:
                 items:
@@ -100,7 +100,7 @@ spec:
                 nullable: true
                 type: array
             required:
-            - images
+            - repositories
             type: object
           status:
             properties:

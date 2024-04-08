@@ -1,5 +1,6 @@
 FROM golang:1.22 AS build
 WORKDIR /app
+RUN apt-get update && apt-get install -y libbtrfs-dev libgpgme-dev libdevmapper-dev
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .

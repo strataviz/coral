@@ -45,9 +45,6 @@ const (
 
 	AgentConnectionTimeout  time.Duration = 30 * time.Second
 	AgentMaxCallRecvMsgSize int           = 1024 * 1024 * 32
-
-	ConnectionTimeout  time.Duration = 30 * time.Second
-	MaxCallRecvMsgSize int           = 1024 * 1024 * 32
 )
 
 type Agent struct {
