@@ -17,7 +17,7 @@ require (
 	k8s.io/cri-api v0.29.3
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/kubernetes v1.29.3
-	sigs.k8s.io/controller-runtime v0.17.2
+	sigs.k8s.io/controller-runtime v0.17.3
 )
 
 require (
