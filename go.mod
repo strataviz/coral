@@ -3,7 +3,6 @@ module stvz.io/coral
 go 1.22.1
 
 require (
-	github.com/containers/common v0.58.1
 	github.com/containers/image/v5 v5.30.0
 	github.com/go-logr/logr v1.4.1
 	github.com/onsi/ginkgo/v2 v2.17.1
@@ -11,7 +10,7 @@ require (
 	github.com/prometheus/client_golang v1.19.0
 	github.com/spf13/cobra v1.8.0
 	go.uber.org/zap v1.27.0
-	google.golang.org/grpc v1.62.1
+	google.golang.org/grpc v1.63.2
 	k8s.io/api v0.29.3
 	k8s.io/apiextensions-apiserver v0.29.3
 	k8s.io/apimachinery v0.29.3
@@ -19,12 +18,13 @@ require (
 	k8s.io/cri-api v0.29.3
 	k8s.io/klog/v2 v2.120.1
 	k8s.io/kubernetes v1.29.3
-	sigs.k8s.io/controller-runtime v0.17.2
+	sigs.k8s.io/controller-runtime v0.17.3
 	stvz.io/hashring v0.1.0
 )
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
+	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/Microsoft/hcsshim v0.12.0-rc.3 // indirect
