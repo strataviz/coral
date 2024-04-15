@@ -20,7 +20,6 @@ import (
 )
 
 const (
-	// TODO: Change me
 	RootUsage     = "coral [COMMAND] [ARG...]"
 	RootShortDesc = "Build controller and image sync tool for kubernetes"
 	RootLongDesc  = `Coral is a build controller and image sync tool for kubernetes.  It

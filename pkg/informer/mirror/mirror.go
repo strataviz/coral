@@ -47,7 +47,6 @@ func (h *MirrorHandler) add(obj *stvziov1.Mirror) {
 			Name:      s.Name,
 			Namespace: obj.Namespace,
 		}
-
 	}
 	h.Keyring.Add(secrets...)
 }

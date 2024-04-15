@@ -97,8 +97,8 @@ func (m *Mirror) RunE(cmd *cobra.Command, args []string) error {
 		os.Exit(1)
 	}
 
-	// TODO: better/existant error handling
-	go informer.Start(ctx)
+	// TODO: better/existent error handling
+	go informer.Start(ctx) // nolint:errcheck
 
 	// Think about moving all the command stuff into directories here in cmd...
 	mirror := command.New(&command.Options{

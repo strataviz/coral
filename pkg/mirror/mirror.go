@@ -77,14 +77,15 @@ func (m *Mirror) Start(ctx context.Context) error {
 	}
 }
 
-func (m *Mirror) process(ctx context.Context, wq WorkQueue, sem *Semaphore) {
+// TODO: Refactor for simplicity.
+func (m *Mirror) process(ctx context.Context, wq WorkQueue, sem *Semaphore) { //nolint:gocognit
 	for _, mirror := range m.informer.Mirrors {
 		log := m.log.WithValues("mirror", mirror.Name)
 
 		registry := mirror.Spec.Registry
 
 		for _, repo := range mirror.Spec.Repositories {
-			log := log.WithValues("repo", *repo.Name, "registry", registry)
+			log := log.WithValues("repo", *repo.Name, "registry", registry) //nolint:govet
 			log.V(8).Info("processing repo")
 
 			// Normalize repo name without tags.

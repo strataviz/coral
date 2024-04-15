@@ -6,7 +6,7 @@ metadata:
   finalizers:
     - image.stvz.io/finalizer
 spec:
-  images:
+  repositories:
     - name: docker.io/library/debian
       tags:
         - bookworm-slim
