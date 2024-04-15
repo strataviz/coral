@@ -16,6 +16,8 @@ package v1
 // +kubebuilder:docs-gen:collapse=Apache License
 
 import (
+	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/selection"
@@ -167,10 +169,27 @@ type ImageStatus struct {
 	Data []ImageData `json:"data"`
 }
 
+type RegistrySpec struct {
+	// +required
+	// Host is the hostname of the registry.
+	Host string `json:"host"`
+	// +optional
+	// Port is the port of the registry.  It's default is 5000.
+	Port int `json:"port"`
+	// +optional
+	// TLSVerify is a flag to enable or disable tls verification.  Default is true.
+	TLSVerify bool `json:"tlsVerify"`
+	// Maybe we should add the creds here.
+}
+
+func (r *RegistrySpec) URL() string {
+	return fmt.Sprintf("docker://%s:%d", r.Host, r.Port)
+}
+
 type MirrorSpec struct {
 	// +optional
 	// Registry is the url to the local registry.  It's default is "localhost:5000".
-	Registry string `json:"registry"`
+	Registry *RegistrySpec `json:"registry"`
 	// +required
 	// Repositories is a list of repositories and associated tags that will be mirrored.
 	Repositories Repositories `json:"repositories"`

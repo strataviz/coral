@@ -6,6 +6,7 @@ commonAnnotations:
   strata.stvz.io/support: "https://github.com/strataviz/coral/issues"
 resources: 
   - ../../base
+  - entrypoint.yaml
   - secret.yaml
   - registry.yaml
 patches:
@@ -18,4 +19,9 @@ patches:
     target:
       kind: DaemonSet
       name: coral-agent
+      namespace: coral
+  - path: mirror.yaml
+    target:
+      kind: Deployment
+      name: mirror
       namespace: coral

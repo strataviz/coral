@@ -46,7 +46,16 @@ spec:
                 nullable: true
                 type: array
               registry:
-                type: string
+                properties:
+                  host:
+                    type: string
+                  port:
+                    type: integer
+                  tlsVerify:
+                    type: boolean
+                required:
+                - host
+                type: object
               repositories:
                 items:
                   properties:

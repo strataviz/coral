@@ -18,30 +18,27 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	runtime "k8s.io/cri-api/pkg/apis/runtime/v1"
+	"sigs.k8s.io/controller-runtime/pkg/log"
+	"stvz.io/coral/pkg/credentials"
 )
 
 type Worker struct {
-	id  int
-	log logr.Logger
-
-	authCache map[string]*runtime.AuthConfig
+	id      int
+	log     logr.Logger
+	keyring *credentials.Keyring
 }
 
-func NewWorker(id int) *Worker {
+func NewWorker(id int, keyring *credentials.Keyring) *Worker {
 	return &Worker{
-		id:        id,
-		log:       logr.Discard(),
-		authCache: make(map[string]*runtime.AuthConfig),
+		id:      id,
+		keyring: keyring,
 	}
 }
 
-func (w *Worker) WithLogger(log logr.Logger) *Worker {
-	w.log = log.WithName("mirror-worker").WithValues("worker", w.id)
-	return w
-}
-
 func (w *Worker) Start(ctx context.Context, wq WorkQueue, sem *Semaphore) {
+	w.log = log.FromContext(ctx)
+
+	w.log.V(8).Info("starting worker", "id", w.id)
 	for item := range wq {
 		w.process(ctx, item, sem)
 	}
@@ -66,30 +63,22 @@ func (w *Worker) process(ctx context.Context, item *Item, sem *Semaphore) {
 }
 
 func (w *Worker) sync(ctx context.Context, item *Item) error {
-	if len(item.Auth) == 0 {
+	auth, found, err := w.keyring.Lookup(ctx, item.Image)
+	if err != nil {
+		return err
+	}
+
+	if !found {
 		w.log.V(6).Info("attempting to sync image without credentials", "image", item.Image, "registry", item.Registry)
-		return Copy(ctx, nil, item.Image, item.Registry)
+		return Copy(ctx, nil, item.Registry, item.Image)
 	}
 
-	if auth, ok := w.authCache[item.Image]; ok {
+	for _, a := range auth {
+		w.log.V(4).Info("attempting to pull image with provided credentials", "image", item.Image, "username", a.Username)
 		// TODO: convert auth.
-		err := Copy(ctx, auth, item.Image, item.Registry)
-		// TODO: differentiate between auth errors and other errors.
-		if err != nil {
-			w.log.V(8).Error(err, "failed to pull image with cached credentials", "image", item.Image)
-			delete(w.authCache, item.Image)
-		}
-	}
-
-	for _, auth := range item.Auth {
-		w.log.V(4).Info("attempting to pull image with provided credentials", "image", item.Image, "username", auth.Username)
-		// TODO: convert auth.
-		err := Copy(ctx, auth, item.Image, item.Registry)
+		err := Copy(ctx, a, item.Registry, item.Image)
 		if err != nil {
 			continue
-		} else {
-			w.authCache[item.Image] = auth
-			return nil
 		}
 	}
 

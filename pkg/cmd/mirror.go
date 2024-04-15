@@ -20,12 +20,15 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap/zapcore"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
-	"stvz.io/coral/pkg/mirror"
-	"stvz.io/hashring"
+	stvziov1 "stvz.io/coral/pkg/apis/stvz.io/v1"
+	"stvz.io/coral/pkg/informer/mirror"
+	command "stvz.io/coral/pkg/mirror"
 )
 
 const (
@@ -52,32 +55,17 @@ func NewMirror() *Mirror {
 func (m *Mirror) RunE(cmd *cobra.Command, args []string) error {
 	log := zap.New(
 		zap.Level(zapcore.Level(m.logLevel) * -1),
-	)
+	).WithName("mirror")
+
+	scheme := runtime.NewScheme()
+	_ = stvziov1.AddToScheme(scheme)
+	_ = corev1.AddToScheme(scheme)
+	_ = appsv1.AddToScheme(scheme)
 
 	ctx := ctrl.SetupSignalHandler()
 	ctrl.SetLogger(log)
 
-	log.Info("starting mirror")
-
-	metrics, err := metricsserver.NewServer(
-		metricsserver.Options{
-			BindAddress: ":9090",
-		},
-		nil, nil,
-	)
-	if err != nil {
-		log.Error(err, "failed to create metrics server")
-		os.Exit(1)
-	}
-
-	go func() {
-		err := metrics.Start(ctx)
-		if err != nil {
-			log.Error(err, "failed to start metrics server")
-			os.Exit(1)
-		}
-	}()
-
+	log.Info("gathering host information")
 	if m.name == "" {
 		// try to get the name from the environment
 		m.name = os.Getenv("HOSTNAME")
@@ -93,19 +81,35 @@ func (m *Mirror) RunE(cmd *cobra.Command, args []string) error {
 		os.Exit(1)
 	}
 
-	mirrorCache := mirror.NewMirrorCache()
-	ring := hashring.NewRing(1, nil)
+	log.Info("initializing manager")
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		Scheme: scheme,
+	})
+	if err != nil {
+		log.Error(err, "unable to initialize manager")
+		os.Exit(1)
+	}
 
-	mirror := mirror.New(&mirror.Options{
-		Log:         log,
-		Scope:       m.scope,
-		Namespace:   m.namespace,
-		Name:        m.name,
-		Labels:      l,
-		MirrorCache: mirrorCache,
-		Ring:        ring,
+	log.Info("setting up informer")
+	informer, err := mirror.SetupWithManager(ctx, mgr, m.namespace, l)
+	if err != nil {
+		log.Error(err, "unable to setup informer")
+		os.Exit(1)
+	}
+
+	// TODO: better/existant error handling
+	go informer.Start(ctx)
+
+	// Think about moving all the command stuff into directories here in cmd...
+	mirror := command.New(&command.Options{
+		Scope:     m.scope,
+		Namespace: m.namespace,
+		Name:      m.name,
+		Labels:    l,
+		Informer:  informer,
 	})
 
+	log.Info("starting mirror watcher")
 	return mirror.Start(ctx)
 }
 

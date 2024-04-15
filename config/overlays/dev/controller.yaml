@@ -28,6 +28,8 @@ spec:
               fieldRef:
                 fieldPath: spec.nodeName
           command:
+            - /entrypoint.sh
+          args:
             - sleep
             - infinity
           securityContext:
@@ -42,6 +44,9 @@ spec:
             - name: tls
               mountPath: "/etc/webhook/tls"
               readOnly: true
+            - name: entrypoint
+              mountPath: /entrypoint.sh
+              subPath: entrypoint.sh
       volumes:
         - name: app
           hostPath:
@@ -49,3 +54,7 @@ spec:
         - name: tls
           secret:
             secretName: coral-webhook-cert
+        - name: entrypoint
+          configMap:
+            name: entrypoint
+            defaultMode: 0755
