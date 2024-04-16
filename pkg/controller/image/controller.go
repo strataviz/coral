@@ -54,7 +54,7 @@ func SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=stvz.io,resources=images/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=stvz.io,resources=images/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=nodes,verbs=get;list;watch;update;patch
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch
 
 // Reconcile is the main controller loop for the image controller.
 func (c Controller) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -154,7 +154,7 @@ func (c *Controller) finish(ctx context.Context, image *stvziov1.Image) error {
 	// by another object, then the image would not be deleted and we would be stuck
 	// here forever.  We could potentially get around this by adding a name/namespace
 	// itentifier to the label?  Will revisit this later.
-	for _, i := range image.Spec.Images {
+	for _, i := range image.Spec.Repositories {
 		for _, tag := range i.Tags {
 			tagSelectors := selectors.DeepCopySelector()
 			label := stvziov1.HashedImageLabelKey(*i.Name + ":" + tag)

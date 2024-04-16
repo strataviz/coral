@@ -12,16 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package image
+package mirror
 
 import (
-	"testing"
-
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	runtime "k8s.io/cri-api/pkg/apis/runtime/v1"
 )
 
-func TestSuite(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Image Injector Suite")
+type Item struct {
+	Image    string
+	Registry string
+	Auth     []*runtime.AuthConfig
+}
+
+type WorkQueue chan *Item
+
+func NewWorkQueue() WorkQueue {
+	return make(chan *Item)
+}
+
+func (wq WorkQueue) Close() {
+	close(wq)
 }

@@ -40,7 +40,7 @@ func (i *Image) Default() {
 	Defaulted(i)
 }
 
-func validateSpecImages(images []ImageSpecImages) (admission.Warnings, error) {
+func validateSpecRepositories(images []RepositorySpec) (admission.Warnings, error) {
 	warnings := make(admission.Warnings, 0)
 
 	for _, image := range images {
@@ -76,7 +76,7 @@ func validateSpecImages(images []ImageSpecImages) (admission.Warnings, error) {
 }
 
 func validateSpec(spec ImageSpec) (admission.Warnings, error) {
-	return validateSpecImages(spec.Images)
+	return validateSpecRepositories(spec.Repositories)
 }
 
 // ValidateCreate implements webhook Validator.

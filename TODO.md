@@ -1,14 +1,21 @@
 # Notes
 
+## NOTES
+* Remember to Clean up image/repository namings in all the packages and docs.
+
 ## CURRENT
-* Create a new type called RegistryMirror.  The registry mirror will work similarly to the agent workers
-where a sync group will pull from external repositories into a local repository.
+* Finish Mirror
+* Move agent lists to new NormalizedList to support inexplicit names.
+* Clean up spec image/repository namings in all the packages and docs.
+* I like the informer method of getting the mirrors, so move monitor and agent to this instead of listing.  Should be straightforward and cut back some of the calls.  What I don't know is how much pressure that will put on the api noteably with the daemons on every node.  I can't imagine that it is any more than having all of them hit the apiserver/etc every iteration and pull down lists.
+* Add the parse step from the normalization method into the validation step for repositories.  This will allow us to catch repo naming errors before admission.
 * Deploy to dockerhub.
 * Comments.
 * Finish and polish the README and other docs.
 * Package manifests and install docs.
 * Move TODO items into github issues.
 * Delete the TODO file ;)
+* Watch secrets in the agent and mirror.  We need to be notified when updates to our referenced secrets are updated.
 
 ## MVP
 * Ready after current
@@ -17,6 +24,8 @@ where a sync group will pull from external repositories into a local repository.
 * NA
 
 ## LATER
+* Support the `all` option for syncing repository tags.
+* Garbage collection for local registries.
 * Better monitor with dedicated workers instead of a single process per image.
 * Standardize tests.  The layout has varied as I've gotten used to the new framework.
 * Provide a way for coral to override annotations and force pullpolicies and selectors.  By default, have them disabled so the pre-fetch is more of a convienience feature and if the container doesn't exist on the system it pulls it so no selectors are needed.  However, there may be the case where admins will want to lock image use to those that are already available (or maybe open everything up to only-mirrored) and want to override individual settings.

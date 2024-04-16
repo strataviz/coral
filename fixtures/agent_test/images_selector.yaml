@@ -11,7 +11,7 @@ spec:
       operator: in
       values:
         - other
-  images:
+  repositories:
     - name: docker.io/library/debian
       tags:
         - bookworm-slim
@@ -30,7 +30,7 @@ spec:
       operator: in
       values:
         - analytics
-  images:
+  repositories:
     - name: docker.io/strataviz/pyflink
       tags:
         - "1.17"

@@ -24,5 +24,10 @@ const (
 	DefaultPollInterval         time.Duration = 10 * time.Second
 	DefaultContainerdAddr       string        = "unix:///kubelet/containerd/containerd.sock"
 	DefaultNamespace            string        = ""
+	DefaultScope                string        = ""
+	DefaultLabels               string        = "app=coral,component=mirror"
 	DefaultParallel             int           = 1
+
+	ConnectionTimeout  time.Duration = 30 * time.Second
+	MaxCallRecvMsgSize int           = 1024 * 1024 * 32
 )

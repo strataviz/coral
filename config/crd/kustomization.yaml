@@ -7,3 +7,4 @@ commonAnnotations:
   strata.stvz.io/support: "https://github.com/strataviz/coral/issues"
 resources:
   - stvz.io_images.yaml
+  - stvz.io_mirrors.yaml

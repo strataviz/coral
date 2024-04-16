@@ -142,10 +142,15 @@ localdev:
 	@$(KUBECTL) wait --for=condition=available --timeout=120s deploy -l app.kubernetes.io/group=cert-manager -n cert-manager
 	@$(KUBECTL) apply -k config/overlays/$(ENV)
 
-.PHONY: run
-run:
+.PHONY: controller-run
+controller-run:
 	$(eval POD := $(shell kubectl get pods -n coral -l app=coral -o=custom-columns=:metadata.name --no-headers))
 	@$(KUBECTL) exec -n coral -it pod/$(POD) -- bash -c "go run main.go controller --log-level=8 --skip-insecure-verify"
+
+.PHONY: mirror-run
+mirror-run:
+	$(eval POD := $(shell kubectl get pods -n coral -l app=coral,component=mirror -o=custom-columns=:metadata.name --no-headers))
+	$(KUBECTL) exec -n coral -it pod/$(POD) -- bash -c "go run main.go mirror --log-level=8 --name=$(POD) --namespace=coral --labels=app=coral,component=mirror"
 
 .PHONY: agent-run
 agent-run:

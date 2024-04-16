@@ -16,6 +16,8 @@ package v1
 // +kubebuilder:docs-gen:collapse=Apache License
 
 import (
+	"fmt"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/selection"
@@ -33,18 +35,45 @@ type NodeSelector struct {
 	Values   []string           `json:"values"`
 }
 
-type ImageSpecImages struct {
+type ListSelector string
+
+const (
+	ListSelectorAll ListSelector = "all"
+)
+
+// RepositorySpec is the spec for a Repository resource.
+type RepositorySpec struct {
 	// +required
-	// ImageName is the name of the image to mirror.
+	// Name is the repository name that will be used.
 	Name *string `json:"name"`
 	// +required
 	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:MaxItems=100
-	// Tags are the tags of the image to mirror.
+	// Tags are the repository tags that will be acted on.
 	Tags []string `json:"tags"`
 	// +optional
-	// pullSecrets is a list of secrets to use when pulling the image.
-	// pullSecrets []corev1.LocalObjectReference `json:"pullSecrets"`
+	// ListSelection is the type of selection used when syncing a repository.  It
+	// is currently unused, however, in the future it will be used by the mirror
+	// as a shortcut to sync all tags in a repository.  When 'all' is specified,
+	// any tags defined are ignored. Most likely it will be excluded from pulls on
+	// the node agent due to potential space constraints.
+	ListSelection ListSelector `json:"listSelection"`
+}
+
+type Repositories []RepositorySpec
+
+func (r Repositories) NormalizedList() ([]string, error) {
+	var list []string
+	for _, repo := range r {
+		for _, tag := range repo.Tags {
+			name, err := NormalizeRepoTag(*repo.Name, tag)
+			if err != nil {
+				return nil, err
+			}
+			list = append(list, name)
+		}
+	}
+	return list, nil
 }
 
 // ImageSpec is the spec for a Image resource.
@@ -54,9 +83,7 @@ type ImageSpec struct {
 	// Selector defines which nodes the image should be synced to.
 	Selector []NodeSelector `json:"selector"`
 	// +required
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:MaxItems=100
-	Images []ImageSpecImages `json:"images"`
+	Repositories Repositories `json:"repositories"`
 	// +optional
 	// +nullable
 	// ImagePullSecrets is a list of secrets to use when pulling the image.
@@ -140,4 +167,68 @@ type ImageStatus struct {
 	// +optional
 	// Data is a list of image data that will be used to track the images on the nodes.
 	Data []ImageData `json:"data"`
+}
+
+type RegistrySpec struct {
+	// +required
+	// Host is the hostname of the registry.
+	Host string `json:"host"`
+	// +optional
+	// Port is the port of the registry.  It's default is 5000.
+	Port int `json:"port"`
+	// +optional
+	// TLSVerify is a flag to enable or disable tls verification.  Default is true.
+	TLSVerify bool `json:"tlsVerify"`
+	// Maybe we should add the creds here.
+}
+
+func (r *RegistrySpec) URL() string {
+	return fmt.Sprintf("docker://%s:%d", r.Host, r.Port)
+}
+
+type MirrorSpec struct {
+	// +optional
+	// Registry is the url to the local registry.  It's default is "localhost:5000".
+	Registry *RegistrySpec `json:"registry"`
+	// +required
+	// Repositories is a list of repositories and associated tags that will be mirrored.
+	Repositories Repositories `json:"repositories"`
+	// +optional
+	// +nullable
+	// ImagePullSecrets is a list of secrets to use when pulling the image.
+	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets"`
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +k8s:defaulter-gen=true
+// +kubebuilder:validation:Required
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Namespaced,shortName=mi,singular=mirror
+// +kubebuilder:printcolumn:name="Images",type="integer",JSONPath=".status.totalImages",description="The number of total images managed by the object"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+
+// Mirror is a resource defining images that will be mirrored to the local registry.  Currently
+// the mirror requires that all images be defined.  In future iterations we'll support mirroring
+// all images from an external registry.
+type Mirror struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+	Spec              MirrorSpec `json:"spec"`
+	// +optional
+	Status MirrorStatus `json:"status"`
+}
+
+type MirrorStatus struct {
+	// +optional
+	// TotalImages is the number of images that are being mirrored.
+	TotalImages int `json:"totalImages"`
+}
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type MirrorList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Mirror `json:"items"`
 }

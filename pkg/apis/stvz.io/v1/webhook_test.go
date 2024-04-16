@@ -26,7 +26,7 @@ var _ = Describe("In the admission webhook", func() {
 		Context("and the spec is not valid", func() {
 			It("should error if the name field isn't present", func() {
 				spec := ImageSpec{
-					Images: []ImageSpecImages{
+					Repositories: []RepositorySpec{
 						{Tags: []string{"tag1"}},
 					},
 				}
@@ -38,7 +38,7 @@ var _ = Describe("In the admission webhook", func() {
 
 			It("should error if no tags are provided", func() {
 				spec := ImageSpec{
-					Images: []ImageSpecImages{
+					Repositories: []RepositorySpec{
 						{Name: &[]string{"test"}[0]},
 					},
 				}
@@ -50,7 +50,7 @@ var _ = Describe("In the admission webhook", func() {
 
 			It("should error if there are duplicate tags", func() {
 				spec := ImageSpec{
-					Images: []ImageSpecImages{
+					Repositories: []RepositorySpec{
 						{
 							Name: &[]string{"test"}[0],
 							Tags: []string{"tag1", "tag1", "tag2"},
@@ -65,7 +65,7 @@ var _ = Describe("In the admission webhook", func() {
 
 			It("should warn if the 'latest' tag is provided", func() {
 				spec := ImageSpec{
-					Images: []ImageSpecImages{
+					Repositories: []RepositorySpec{
 						{
 							Name: &[]string{"test"}[0],
 							Tags: []string{"latest"},
@@ -81,7 +81,7 @@ var _ = Describe("In the admission webhook", func() {
 		Context("and there are no errors with the spec", func() {
 			It("should not return an error", func() {
 				spec := ImageSpec{
-					Images: []ImageSpecImages{
+					Repositories: []RepositorySpec{
 						{
 							Name: &[]string{"test"}[0],
 							Tags: []string{"tag1", "tag2", "tag3"},

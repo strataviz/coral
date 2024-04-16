@@ -7,7 +7,7 @@ metadata:
 spec:
   enabled: true
   pollInterval: 30s 
-  images:
+  repositories:
     - name: docker.io/library/debian
       tags:
         - bookworm-slim

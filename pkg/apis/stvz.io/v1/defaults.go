@@ -23,10 +23,23 @@ import (
 
 func defaultedImage(obj *Image) {}
 
+func defaultedMirror(obj *Mirror) {
+	spec := obj.Spec
+	if spec.Registry == nil {
+		spec.Registry = &RegistrySpec{
+			Host:      "localhost",
+			Port:      5000,
+			TLSVerify: false,
+		}
+	}
+}
+
 // Defaulted sets the resource defaults.
 func Defaulted(obj client.Object) {
 	switch obj := obj.(type) { //nolint:gocritic
 	case *Image:
 		defaultedImage(obj)
+	case *Mirror:
+		defaultedMirror(obj)
 	}
 }

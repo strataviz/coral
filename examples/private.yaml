@@ -5,7 +5,7 @@ metadata:
 spec:
   imagePullSecrets:
     - name: regcred
-  images:
+  repositories:
     - name: docker.io/strataviz/pyflink
       tags:
         - "1.17"

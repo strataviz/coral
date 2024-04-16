@@ -1,13 +1,13 @@
 apiVersion: stvz.io/v1
-kind: Image
+kind: Mirror
 metadata:
   name: base
-  namespace: default
-  finalizers:
-    - image.stvz.io/finalizer
 spec:
+  registry:
+    host: registry.coral.svc.cluster.local
+    port: 5000
   repositories:
-    - name: docker.io/library/debian
+    - name: debian
       tags:
         - bookworm-slim
         - bullseye-slim

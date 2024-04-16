@@ -5,16 +5,23 @@ commonAnnotations:
   strata.stvz.io/license: "Apache"
   strata.stvz.io/support: "https://github.com/strataviz/coral/issues"
 resources: 
- - ../../base
- - secret.yaml
+  - ../../base
+  - entrypoint.yaml
+  - secret.yaml
+  - registry.yaml
 patches:
-  - path: deployment.yaml
+  - path: controller.yaml
     target:
       kind: Deployment
       name: coral
       namespace: coral
-  - path: daemonset.yaml
+  - path: agent.yaml
     target:
       kind: DaemonSet
       name: coral-agent
+      namespace: coral
+  - path: mirror.yaml
+    target:
+      kind: Deployment
+      name: mirror
       namespace: coral

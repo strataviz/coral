@@ -9,5 +9,6 @@ resources:
   - ../crd
   - ../rbac
   - ../webhook
-  - daemonset.yaml
-  - deployment.yaml
+  - agent.yaml
+  - controller.yaml
+  - mirror.yaml

@@ -5,7 +5,7 @@ metadata:
   namespace: default
   finalizers: []
 spec:
-  images:
+  repositories:
     - name: docker.io/library/debian
       tags:
         - bookworm-slim
